@@ -1,0 +1,35 @@
+
+
+<%# column_chart [ {name:"Last 30 days", data:[[ "Day", daily_mean[0]]]}, {name: "All", data: [[ "Day", daily_mean[1]]]} ], library: { title: "Daily mean power usage (Watt/day)" } %>
+
+<%
+now = params[:d].nil? ? Date.today : Date.parse(params[:d]) # @now # Date.today
+
+mean = [ Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, now << 1, now) ]
+data = [ Pulse.monthly(current_node), Pulse.monthly(current_node, now << 1, now) ]
+dd = mean.map { |m| data[0].map { |r| [ r[0], m ] } }
+ddd = data[0].map.with_index { |r, i| [ r[0], r[1], data[1][i].nil? ? 0 : data[1][i][1] ] }
+%>
+
+<%= column_chart [ 
+	{name: "Last 30 days", data: data[1]}, 
+	{name: "All time", data: data[0]},
+	{name: "Last 30 days mean value", data: dd[1]},
+	{name: "All time mean value", data: dd[0]}
+	 ],
+	library: { title: "Monthly power usage (Watt/day)", series: { 2 => { type: "line"}, 3 => { type: "line"} } } %>
+
+<%# line_chart Pulse.raw(Date.today-27, Date.today-20).map { |r| [r.pulse_time, r.power] }, library: { title: "Power usage (W)" } %>
+
+<h1>Query#daily</h1>
+<p>
+<table>
+	<tr><th>Day</th><th>All time Power (W)</th><th>Last 30 days Power (W)</th></tr>
+	<tr><td>Average<td><%= mean[0] %></td><td><%= mean[1] %></td></tr>
+	<% for q in ddd %>
+		<tr>
+		<% for p in q %><td><%= p %></td><% end %>
+		</tr>
+	<% end %>
+</table>
+</p>

@@ -11,10 +11,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150803061821) do
+ActiveRecord::Schema.define(version: 20150803174714) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "nodes", force: :cascade do |t|
+    t.string   "title"
+    t.integer  "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  add_index "nodes", ["user_id"], name: "index_nodes_on_user_id", using: :btree
+
+  create_table "pulses", force: :cascade do |t|
+    t.datetime "pulse_time",    precision: 6
+    t.float    "time_interval"
+    t.float    "power"
+    t.float    "elapsed_kwh"
+    t.integer  "pulse_count"
+    t.integer  "raw_count"
+    t.integer  "node_id"
+  end
+
+  add_index "pulses", ["node_id"], name: "index_pulses_on_node_id", using: :btree
+  add_index "pulses", ["pulse_time"], name: "index_pulses_on_pulse_time", using: :btree
 
   create_table "users", force: :cascade do |t|
     t.string   "email",                  default: "", null: false
@@ -30,9 +52,14 @@ ActiveRecord::Schema.define(version: 20150803061821) do
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
     t.string   "name"
+    t.integer  "node_id"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
+  add_index "users", ["node_id"], name: "index_users_on_node_id", using: :btree
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
 
+  add_foreign_key "nodes", "users"
+  add_foreign_key "pulses", "nodes"
+  add_foreign_key "users", "nodes"
 end

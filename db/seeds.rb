@@ -7,3 +7,13 @@
 #   Mayor.create(name: 'Emanuel', city: cities.first)
 user = CreateAdminService.new.call
 puts 'CREATED ADMIN USER: ' << user.email
+
+case Rails.env 
+when "development"
+
+	u = User.create(email: "me@home.com", password: "password")
+	n = Node.create(user: u, title: "Node 1")
+	u.update(node: n)
+
+when "production"
+end

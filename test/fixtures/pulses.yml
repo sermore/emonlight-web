@@ -1,0 +1,58 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+# This model initially had no columns defined.  If you add columns to the
+# model remove the '{}' from the fixture names and add the columns immediately
+# below each fixture, per the syntax in the comments below
+
+<%
+t = DateTime.parse('2015-05-01')
+n = 0
+pwh = 60.0
+while t.day < 10 do
+%>
+pulse_fixed60_<%= n += 1 %>:
+  node: fixed60
+  pulse_time: <%=t%>
+  power: <%=pwh%>
+<% 
+  t += (3600.0/pwh)/86400.0
+end %>
+
+<%
+t = DateTime.parse('2015-05-01')
+n = 0
+while t.day < 18 do
+%>
+pulse_wday_<%= n += 1 %>:
+  node: wday
+  pulse_time: <%= t %>
+  power: <%= pwh = 10 + t.wday * 10 %>
+<% 
+  t += (3600.0/pwh)/86400.0
+end %>
+
+<%
+t = DateTime.parse('2015-05-01')
+n = 0
+while t.day < 7 do
+%>
+pulse_hourly_<%= n += 1 %>:
+  node: hourly
+  pulse_time: <%= t %>
+  power: <%= pwh = 1000 + t.hour * 10 %>
+<% 
+  t += (3600.0/pwh)/86400.0
+end %>
+
+<%
+t = DateTime.parse('2015-05-01')
+n = 0
+while t.month < 7 do
+%>
+pulse_monthly_<%= n += 1 %>:
+  node: monthly
+  pulse_time: <%= t %>
+  power: <%= pwh = 10 + t.month * 10 %>
+<% 
+  t += (3600.0/pwh)/86400.0
+end %>

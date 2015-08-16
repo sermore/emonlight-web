@@ -1,0 +1,18 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+fixed60:
+  title: Constant value at 1 Watt per minute
+  user: test2
+
+wday: 
+  title: Value dependendant on day number
+  user: test1
+
+hourly: 
+  title: Values from 10 to 240 based on hour
+  user: test1
+
+monthly: 
+  title: Values from 50 to 70 based on month
+  user: test1
+

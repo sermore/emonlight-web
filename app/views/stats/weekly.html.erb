@@ -1,0 +1,62 @@
+
+
+<%# column_chart [ {name:"Last 30 days", data:[[ "Day", daily_mean[0]]]}, {name: "All", data: [[ "Day", daily_mean[1]]]} ], library: { title: "Daily mean power usage (Watt/day)" } %>
+
+<%
+now = params[:d].nil? ? Date.today : Date.parse(params[:d]) # @now # Date.today
+
+mean = [ Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, now << 1, now) ]
+weekly_data = [ Pulse.weekly(current_node), Pulse.weekly(current_node, now << 1, now) ]
+dd = mean.map { |dm| weekly_data[0].map { |r| [ r[0], dm ] } }
+ddd = weekly_data[0].map.with_index { |r, i| [ r[0], r[1], weekly_data[1][i].nil? ? 0 :  weekly_data[1][i][1] ] }
+
+hourly_mean = [ Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, now << 1, now) ]
+daily_data = [ Pulse.daily(current_node), Pulse.daily(current_node, now << 1, now) ]
+hd = hourly_mean.map { |hm| daily_data[0].map { |r| [ r[0], hm ] } }
+hdd = daily_data[0].map.with_index { |r, i| [ r[0], r[1], daily_data[1][i].nil? ? 0 :  daily_data[1][i][1] ] }
+
+%>
+
+<%= column_chart [ 
+	{name: "Last 30 days", data: weekly_data[1]}, 
+	{name: "All time", data: weekly_data[0]}, 
+	{name: "Last 30 days mean value", data: dd[1]},
+	{name: "All time mean value", data: dd[0]} ],
+	library: { title: "Weekly power usage (Watt/day)", series: { 2 => { type: "line"}, 3 => { type: "line"} } } %>
+
+
+<%= column_chart [ 
+	{name: "Last 30 days", data: daily_data[1]}, 
+	{name: "All time", data: daily_data[0]}, 
+	{name: "Last 30 days mean value", data: hd[1]},
+	{name: "All time mean value", data: hd[0]} ],
+	library: { title: "Daily power usage (Watt/hour)", series: { 2 => { type: "line"}, 3 => { type: "line"} } } %>
+
+
+<%# line_chart Pulse.raw(Date.today-27, Date.today-20).map { |r| [r.pulse_time, r.power] }, library: { title: "Power usage (W)" } %>
+
+<h1>Query#weekly</h1>
+<p>
+<table>
+	<tr><th>Day</th><th>All time Power (W)</th><th>Last 30 days Power (W)</th></tr>
+	<tr><td>Average<td><%= mean[0] %></td><td><%= mean[1] %></td></tr>
+	<% for q in ddd %>
+		<tr>
+		<% for p in q %><td><%= p %></td><% end %>
+		</tr>
+	<% end %>
+</table>
+</p>
+
+<h1>Query#daily</h1>
+<p>
+<table>
+	<tr><th>Hour</th><th>All time Power (W)</th><th>Last 30 days Power (W)</th></tr>
+	<tr><td>Average<td><%= hourly_mean[0] %></td><td><%= hourly_mean[1] %></td></tr>
+	<% for q in hdd %>
+		<tr>
+		<% for p in q %><td><%= p %></td><% end %>
+		</tr>
+	<% end %>
+</table>
+</p>

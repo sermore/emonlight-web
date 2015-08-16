@@ -1,0 +1,31 @@
+
+<%
+data = Pulse.raw(current_user, params[:start_p], params[:end_p], params[:len], params[:limit], params[:offset])
+data1 = Pulse.raw(current_user, params[:start_p], params[:end_p], 10000, params[:limit], params[:offset])
+#data1 = []
+%>
+
+
+<%= line_chart [ 
+	{name: "Raw", data: data}
+	],
+	library: { title: "power usage (Watt)", pointSize: 0, series: { 2 => { type: "line"}, 3 => { type: "line"} } } 
+%>
+
+
+<%= line_chart [ 
+	{name: "Raw 1", data: data1}
+	],
+	library: { title: "power usage (Watt)", pointSize: 0, series: { 2 => { type: "line"}, 3 => { type: "line"} } } 
+%>
+
+
+<h1>Query#raw</h1>
+<p>
+<table>
+	<tr><th>Time</th><th>Power (W)</th></tr>
+	<% for q in data %>
+		<tr><td><%= q[0] %></td><td><%= q[1] %></td></tr>
+	<% end %>
+</table>
+</p>

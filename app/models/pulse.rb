@@ -258,7 +258,7 @@ class Pulse < ActiveRecord::Base
 		t0 = 0
 		current_node = Node.find(node_id)
 		ActiveRecord::Base.transaction do
-			ActiveRecord::Base.connection.execute('TRUNCATE pulses RESTART IDENTITY') if truncate
+			#ActiveRecord::Base.connection.execute('TRUNCATE pulses RESTART IDENTITY') if truncate
 			i = 0
 			CSV.foreach(file, :headers => false) do |row|
 				t1 = row[0].to_f + row[1].to_f / 1.0e9
@@ -267,7 +267,8 @@ class Pulse < ActiveRecord::Base
 				begin
 	 	 			q = Pulse.create!(node: current_node, :pulse_time => Time.at(row[0].to_i, row[1].to_f / 1.0e3), :time_interval => t1 - t0,  :power => row[2], :elapsed_kwh => row[3], :pulse_count => row[4], :raw_count => row[5])
 	 	 		rescue
-	 	 			logger.error  "Error importing row #{i}: #{row}"
+	 	 		  	logger.error  "Error importing row #{i}: #{row}"
+	 	 		  	raise 
 	 	 		end
 	  			t0 = t1
 	  			#puts q.pulse_time.iso8601(6)

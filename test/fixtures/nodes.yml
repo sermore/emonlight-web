@@ -1,18 +1,22 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 fixed60:
-  title: Constant value at 1 Watt per minute
+  title: fixed60
   user: test2
+  authentication_token: fixed60
 
 wday: 
-  title: Value dependendant on day number
+  title: wday
   user: test1
+  authentication_token: wday
 
 hourly: 
-  title: Values from 10 to 240 based on hour
+  title: hourly
   user: test1
+  authentication_token: hourly
 
 monthly: 
-  title: Values from 50 to 70 based on month
+  title: monthly
   user: test1
+  authentication_token: monthly
 

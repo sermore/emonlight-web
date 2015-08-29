@@ -254,7 +254,7 @@ class Pulse < ActiveRecord::Base
 =end
 	end
 
-	def self.import(node_id, file, truncate = true)
+	def self.import_xx(node_id, file, truncate = true)
 		t0 = 0
 		current_node = Node.find(node_id)
 		ActiveRecord::Base.transaction do
@@ -262,10 +262,9 @@ class Pulse < ActiveRecord::Base
 			i = 0
 			CSV.foreach(file, :headers => false) do |row|
 				t1 = row[0].to_f + row[1].to_f / 1.0e9
-#				logger.debug "#{++i}: #{Time.at(row[0].to_i, row[1].to_f / 1.0e3).to_s(:db)}"
-	#			q = Pulse.create!(:pulse_time => Time.at(row[0].to_i, (row[1].to_f / 1.0e3).round), :time_interval => t1 - t0,  :power => row[2], :elapsed_kwh => row[3], :pulse_count => row[4], :raw_count => row[5])
+				# logger.debug "#{++i}: #{Time.at(row[0].to_i, row[1].to_f / 1.0e3).to_s(:db)}"
 				begin
-	 	 			q = Pulse.create!(node: current_node, :pulse_time => Time.at(row[0].to_i, row[1].to_f / 1.0e3), :time_interval => t1 - t0,  :power => row[2], :elapsed_kwh => row[3], :pulse_count => row[4], :raw_count => row[5])
+	 	 			q = Pulse.create!(node: current_node, :pulse_time => Time.at(row[0].to_i, row[1].to_f / 1.0e3), :power => row[2])
 	 	 		rescue
 	 	 		  	logger.error  "Error importing row #{i}: #{row}"
 	 	 		  	raise 
@@ -276,4 +275,75 @@ class Pulse < ActiveRecord::Base
 		end
 	end
 
+	def self.import(node_id, file)
+		current_node = Node.find(node_id)
+		Pulse.read(current_node, file, :read_csv, :read_row_sec_msec)
+	end
+
+
+	def self.calc_power(pulses_per_kwh, dt)
+		return (3600000.0 / dt) / pulses_per_kwh
+	end
+
+	def self.calc_last_time(current_node, time)
+		Pulse.where("node_id = :node and pulse_time < :time", { node: current_node, time: time }).maximum(:pulse_time)
+	end
+
+	def self.read_power(current_node, time, last_time)
+		if !time.nil?
+			last_time = calc_last_time(current_node, time) if last_time.nil?
+			#puts "T=",time.class, "L=", last_time.class #.nil? ? 0 : time - last_time
+			power = last_time.nil? ? 0.0 : calc_power(current_node.pulses_per_kwh, (time - last_time).to_f)
+			return last_time, time, power
+		end
+		return nil, nil, nil
+	end	
+
+	def self.read_simple(data, &block)
+		for row in data do 
+			block.call(row) 
+		end
+	end
+
+	def self.read_row_simple(row)
+		row
+	end
+
+	def self.read_row_sec_msec(row)
+		#time_number = row[0].to_f + row[1].to_f / 1.0e9
+		#time = Time.at(row[0].to_i, row[1].to_i)
+		time = Time.at(row[0].to_i, row[1].to_f / 1.0e3)
+	end
+
+	def self.read_csv(data, &block)
+		CSV.foreach(data, :headers => false) { |row| block.call(row) }
+	end
+
+	def self.read(current_node, data, read_func, read_row_func, interval = [])
+		# verify that no values are already present in interval being inserted
+		if !interval.nil? && !interval.empty? && interval.length == 2 && Pulse.where("node_id = :node and pulse_time between :t1 and :t2", { node: current_node, t1: interval[0], t2: interval[1] }).count() > 0
+			return 0
+		end
+		i = 0
+		ActiveRecord::Base.transaction do
+			last_time = nil
+			Pulse.send(read_func, data) { |r|
+				begin
+					row = Pulse.send(read_row_func, r)
+					last_time, time, power = read_power(current_node, row, last_time)
+					if !time.nil?
+	 	 				q = Pulse.create!(node: current_node, :pulse_time => time, :power => power)
+	 	 				last_time = time
+						i += 1
+					end
+	 	 		rescue
+	 	 		  	logger.error  "Error readin row #{i}: #{row}"
+	 	 		  	raise 
+	 	 		end
+			}
+		end
+		return i
+	end
+
+	# private_class_method :read_simple, :read_csv, :read_row_simple, :read_row_sec_msec
 end

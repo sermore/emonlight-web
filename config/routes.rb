@@ -6,6 +6,9 @@ Rails.application.routes.draw do
   	member do
   		post 'import'
   	end
+    collection do
+      post 'read' 
+    end
   end
 
   get 'stats/:node_id/yearly' => 'stats#yearly', as: :yearly_stats

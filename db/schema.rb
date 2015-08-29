@@ -18,20 +18,18 @@ ActiveRecord::Schema.define(version: 20150803174714) do
 
   create_table "nodes", force: :cascade do |t|
     t.string   "title"
+    t.integer  "pulses_per_kwh",       default: 1000
+    t.string   "authentication_token"
     t.integer  "user_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
   end
 
   add_index "nodes", ["user_id"], name: "index_nodes_on_user_id", using: :btree
 
   create_table "pulses", force: :cascade do |t|
-    t.datetime "pulse_time",    precision: 6
-    t.float    "time_interval"
+    t.datetime "pulse_time", precision: 6
     t.float    "power"
-    t.float    "elapsed_kwh"
-    t.integer  "pulse_count"
-    t.integer  "raw_count"
     t.integer  "node_id"
   end
 

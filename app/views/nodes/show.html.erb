@@ -5,6 +5,7 @@
 <p>Starting from: <%= q = @node.pulses.order(:pulse_time).first; q.pulse_time unless q.nil? %>
 <p>Ending at: <%= q = @node.pulses.order(:pulse_time).last; q.pulse_time unless q.nil? %>
 
+
 <%= form_tag import_node_path(@node), multipart: true do %>
 	<%= file_field_tag :file %>
 	<%= submit_tag "Import CSV" %>

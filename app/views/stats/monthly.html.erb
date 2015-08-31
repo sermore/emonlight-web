@@ -3,7 +3,7 @@
 <%# column_chart [ {name:"Last 30 days", data:[[ "Day", daily_mean[0]]]}, {name: "All", data: [[ "Day", daily_mean[1]]]} ], library: { title: "Daily mean power usage (Watt/day)" } %>
 
 <%
-now = params[:d].nil? ? Date.today : Date.parse(params[:d]) # @now # Date.today
+now = params[:d].nil? ? Date.today + 1 : Date.parse(params[:d]) # @now # Date.today
 
 mean = [ Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, now << 1, now) ]
 data = [ Pulse.monthly(current_node), Pulse.monthly(current_node, now << 1, now) ]

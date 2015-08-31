@@ -11,8 +11,9 @@ puts 'CREATED ADMIN USER: ' << user.email
 case Rails.env 
 when "development"
 
-	u = User.create(email: "me@home.com", password: "password")
-	n = Node.create(user: u, title: "Node 1", authentication_token: "12345")
+	# u = User.create(email: "me@home.com", password: "password")
+	u = User.find(1)
+	n = Node.create(user: u, title: "Node 1")
 	u.update(node: n)
 
 when "production"

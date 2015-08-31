@@ -7,15 +7,15 @@ class Pulse < ActiveRecord::Base
 	def self.raw(current_node, start_period, end_period, len = 100, limit = nil, offset = nil)
 		#p = (Date.parse(end_period) - Date.parse(start_period)) / len
 #		begin
-		start_v = DateTime.parse(start_period)
-		end_v = DateTime.parse(end_period)
+		start_v = DateTime.zone.parse(start_period)
+		end_v = DateTime.zone.parse(end_period)
 		len_v = Integer(len)
 		# step in seconds between values
 		step = (end_v - start_v) * 86400 / len_v		
 #		rescue ArgumentError
 #		end
 		if step > 300
-			where(['node_id = :node and pulse_time between :start_p and :end_p', { node: current_node, start_p: start_period, end_p: end_period } ])
+			where(['node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', { node: current_node, start_p: start_period, end_p: end_period } ])
 			.group("trunc(extract(epoch from pulse_time) / #{step})")
 			.limit(limit)
 			.offset(offset)
@@ -23,7 +23,7 @@ class Pulse < ActiveRecord::Base
 			.order("trunc(extract(epoch from pulse_time) / #{step})")
 			.map { |r| [ r.pulse_time, r.power ] }
 		else
-			where(['node_id = :node and pulse_time between :start_p and :end_p', { node: current_node, start_p: start_period, end_p: end_period } ])
+			where(['node_id = :node and pulse_time > :start_p and pulse_time < :end_p', { node: current_node, start_p: start_period, end_p: end_period } ])
 			.limit(limit)
 			.offset(offset)
 			.select(:power, :pulse_time)

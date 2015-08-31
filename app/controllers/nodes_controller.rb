@@ -1,7 +1,8 @@
 class NodesController < ApplicationController
 
+	skip_before_filter :verify_authenticity_token, :only => :read
 	before_filter :authenticate_user_from_token!, only: :read
-	before_action :authenticate_user!
+	before_filter :authenticate_user!
 
 	def new
 		@node = Node.new(user: current_user)
@@ -44,7 +45,7 @@ class NodesController < ApplicationController
 			data = [ data ] unless data.is_a? Enumerable
 			data = data.collect do |t| 
 				break if t.nil? || t.empty?
-				Time.parse(t)
+				Time.zone.parse(t)
 			end
 		elsif data = params[:epoch_time].presence
 			data = [ data ] unless data.is_a? Enumerable
@@ -61,6 +62,7 @@ class NodesController < ApplicationController
 	end
 
 	def authenticate_user_from_token!
+		env["devise.skip_trackable"] = true
     token = params[:token].presence
     node_id = params[:node_id]
     return unless token

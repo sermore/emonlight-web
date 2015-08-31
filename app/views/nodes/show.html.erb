@@ -1,5 +1,6 @@
 <h3>Node <%= @node.title %></h3>
 <p>Title: <%= @node.title %> </p>
+<p>Token: <%= @node.authentication_token %> </p>
 <p>Pulse count: <%= @node.pulses.count %></p>
 <p>Starting from: <%= q = @node.pulses.order(:pulse_time).first; q.pulse_time unless q.nil? %>
 <p>Ending at: <%= q = @node.pulses.order(:pulse_time).last; q.pulse_time unless q.nil? %>

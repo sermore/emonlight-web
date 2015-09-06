@@ -38,12 +38,12 @@ function drawRealTimeChart(remote_url, elementId, timeInterval) {
   var chart = new google.visualization.LineChart(document.getElementById(elementId));
   t = new Date();
   t.setMinutes(t.getMinutes() - timeInterval);
-  loadRealTimeData(remote_url, chart, data, options, timeInterval, t);
+  loadRealTimeData(remote_url, chart, data, options, timeInterval, t, elementId);
 
-  window.realTimeIntervalId = setInterval(loadRealTimeData.bind(null, remote_url, chart, data, options, timeInterval), 1000 * 5);
+  window.realTimeIntervalId = setInterval(loadRealTimeData.bind(null, remote_url, chart, data, options, timeInterval, null, elementId), 1000 * 5);
 }
 
-function loadRealTimeData(remote_url, chart, data, options, timeInterval, time) {
+function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, elementId) {
   if (time == null) {
     time = new Date();
     time.setSeconds(time.getSeconds() - 5);
@@ -66,6 +66,9 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time) 
       while(data.getNumberOfRows() > 10 && data.getValue(0, 0) < timeLimit) data.removeRow(0); 
       data.addRows(json);
       chart.draw(data, options);            
+    }
+    if ($("#" + elementId).length == 0) {
+      clearInterval(window.realTimeIntervalId);
     }
   });
 }

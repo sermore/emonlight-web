@@ -24,7 +24,6 @@ class StatsController < ApplicationController
 		last.each { |w| data[2][w[0].to_i - 1] = w[1] }
 		data[3] = Array.new(12, mean_all.to_f)
 		data[4] = Array.new(12, mean_last.to_f)
-		pp data
   	render json: data.transpose
 	end
 
@@ -40,7 +39,6 @@ class StatsController < ApplicationController
 		last.each { |w| data[2][w[0].to_i - 1] = w[1] }
 		data[3] = Array.new(31, mean_all.to_f)
 		data[4] = Array.new(31, mean_last.to_f)
-		pp data
   	render json: data.transpose
 	end
 
@@ -50,14 +48,12 @@ class StatsController < ApplicationController
 		mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, now - 7, now)
 		all, last = Pulse.weekly(current_node), Pulse.weekly(current_node, now - 7, now)
 
-		pp all
 		data = Array.new(5) { Array.new(7, 0) }
 		data[0] = Date::DAYNAMES
 		all.each { |w| data[1][w[0].to_i] = w[1] }
 		last.each { |w| data[2][w[0].to_i] = w[1] }
 		data[3] = Array.new(7, mean_all.to_f)
 		data[4] = Array.new(7, mean_last.to_f)
-		pp data
   	render json: data.transpose
 	end
 
@@ -73,7 +69,6 @@ class StatsController < ApplicationController
 		last.each { |w| data[2][w[0].to_i] = w[1] }
 		data[3] = Array.new(24, mean_all.to_f)
 		data[4] = Array.new(24, mean_last.to_f)
-		pp data
   	render json: data.transpose
 	end
 

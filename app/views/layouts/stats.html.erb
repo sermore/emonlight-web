@@ -1,4 +1,8 @@
 <% content_for :head do %>
-  <%= javascript_include_tag "//www.google.com/jsapi", "chartkick" %>
+  <script type="text/javascript">
+  	// Load the Visualization API and the piechart package.
+		//google.load('visualization', '1.0', {'packages':['corechart']});
+
+	</script>
 <% end %>
 <%= render template: "layouts/application" %>

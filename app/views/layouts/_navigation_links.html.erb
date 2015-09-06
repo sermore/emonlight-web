@@ -2,7 +2,7 @@
 <ul class="nav navbar-nav">
 <% if user_signed_in? %>
 	<li class="dropdown">
-		<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">Nodes<span class="caret"></span></a>
+		<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">Manage Nodes<span class="caret"></span></a>
 		<ul class="dropdown-menu">
 			<li><%= link_to 'New node', new_node_path %></li>
 <% for node in node_list %>
@@ -14,9 +14,12 @@
 	<li class="dropdown">
 		<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"><%= current_node.title %><span class="caret"></span></a>
 		<ul class="dropdown-menu">
-			<li><%= link_to 'Weekly stats', weekly_stats_path(current_node) %></li>
-			<li><%= link_to 'Monthly stats', monthly_stats_path(current_node) %></li>
-			<li><%= link_to 'Yearly stats', yearly_stats_path(current_node) %></li>
+			<li><%= link_to 'Dashboard', dashboard_stats_path(current_node) %></li>
+			<li><%= link_to 'Real time', chart_stats_path(current_node, :real_time) %></li>
+			<li><%= link_to 'Daily stats', chart_stats_path(current_node, :daily) %></li>
+			<li><%= link_to 'Weekly stats', chart_stats_path(current_node, :weekly) %></li>
+			<li><%= link_to 'Monthly stats', chart_stats_path(current_node, :monthly) %></li>
+			<li><%= link_to 'Yearly stats', chart_stats_path(current_node, :yearly) %></li>
 		</ul>
 	</li>
 <% end #if current_node %>

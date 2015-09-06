@@ -18,7 +18,8 @@ class NodesController < ApplicationController
 	end
 
 	def show
-		@node = Node.find(params[:id])
+		@node = Node.where(id: params[:id], user: current_user).first
+		redirect_to root_url if @node.nil?
 		@current_node = @node
 	end
 
@@ -32,6 +33,7 @@ class NodesController < ApplicationController
 	end
 
 	def read
+		# read node from authenticate_from_token
 		data = read_data
 		res = Pulse.read(@current_node, data, :read_simple, :read_row_simple) unless data.nil? || data.empty?
 		render res.nil? || res == 0 ? { plain: "FAIL", status: 400 } : { plain: "OK" }
@@ -40,19 +42,21 @@ class NodesController < ApplicationController
 	private
 
 	def read_data
+		pwr = params[:power].presence
+		pwr = [ pwr ] unless pwr.is_a? Enumerable 
 		data = params[:time].presence
 		if data
 			data = [ data ] unless data.is_a? Enumerable
-			data = data.collect do |t| 
+			data = data.collect.with_index do |t, i| 
 				break if t.nil? || t.empty?
-				Time.zone.parse(t)
+				[Time.parse(t), pwr.nil? || i >= pwr.length ? nil : pwr[i].to_f]
 			end
 		elsif data = params[:epoch_time].presence
 			data = [ data ] unless data.is_a? Enumerable
-			data = data.collect do |v|
+			data = data.collect.with_index do |v, i|
 				break if v.nil? || v.empty?
 				q = v.split(',')
-				Time.at(q[0].to_i, q[1].to_i)
+				[Time.at(q[0].to_i, q[1].to_f/1000), pwr.nil? || pwr.length <= i ? nil : pwr[i].to_f]
 			end
 		end
 	end		

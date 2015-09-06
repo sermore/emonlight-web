@@ -6,6 +6,11 @@
     <meta name="description" content="<%= content_for?(:description) ? yield(:description) : "Emonlight Web" %>">
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+    <%= javascript_include_tag "//www.google.com/jsapi" %>
+    <script type="text/javascript">
+      google.load('visualization', '1.0', {'packages':['corechart']});
+    </script>
+
     <%= yield :head %>
     <%= csrf_meta_tags %>
   </head>

@@ -1,5 +1,4 @@
 <script type="text/javascript">
-    function onload() {
       if ($("#chart_real_time_div").length)
         drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', 5);    
       else if (window.realTimeIntervalId)
@@ -12,8 +11,4 @@
         drawMonthlyChart("<%=monthly_data_stats_path(current_node)%>", 'chart_monthly_div');
       if ($("#chart_yearly_div").length)
         drawYearlyChart("<%=yearly_data_stats_path(current_node)%>", 'chart_yearly_div');
-    }
-
-    $(document).ready(onload);
-    $(document).on('page:load', onload);    
 </script>

@@ -55,6 +55,7 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
     type:"get",
     url: remote_url,
     data:{ time: time },
+    timeout: 5000,
     contentType: "application/json"
   })
   .done(function(json){

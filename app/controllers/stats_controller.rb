@@ -46,7 +46,7 @@ class StatsController < ApplicationController
 
 	def weekly_data
 		t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
-		t0 = t1 - 7
+		t0 = t1 - 8
 
 		mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, t0, t1)
 		all, last = Pulse.weekly(current_node), Pulse.weekly(current_node, t0, t1)

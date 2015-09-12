@@ -4,8 +4,28 @@ class NodesController < ApplicationController
 	before_filter :authenticate_user_from_token!, only: :read
 	before_filter :authenticate_user!
 
+	def index
+		node_list
+	end
+
 	def new
 		@node = Node.new(user: current_user)
+	end
+
+	def edit
+		@node = Node.where(id: params[:id], user: current_user).first
+		redirect_to root_url if @node.nil?
+		render 'new'
+	end
+
+	def update
+		@node = Node.where(id: params[:id], user: current_user).first
+		if @node.update_attributes(node_params)
+			flash[:success] = "Node updated"
+			redirect_to @node
+		else
+			render 'new'
+		end
 	end
 
 	def create
@@ -16,6 +36,13 @@ class NodesController < ApplicationController
 			@nodes = nil
 		end
 	end
+	
+	def destroy
+		@node = Node.where(id: params[:id], user: current_user).first
+		@node.destroy
+		flash[:success] = "Node deleted"
+		redirect_to nodes_url
+  end
 
 	def show
 		@node = Node.where(id: params[:id], user: current_user).first
@@ -34,6 +61,7 @@ class NodesController < ApplicationController
 
 	def read
 		# read node from authenticate_from_token
+		Time.zone = @current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil?
 		data = read_data
 		res = Pulse.read(@current_node, data, :read_simple, :read_row_simple) unless data.nil? || data.empty?
 		render res.nil? || res == 0 ? { plain: "FAIL", status: 400 } : { plain: "OK" }
@@ -49,20 +77,20 @@ class NodesController < ApplicationController
 			data = [ data ] unless data.is_a? Enumerable
 			data = data.collect.with_index do |t, i| 
 				break if t.nil? || t.empty?
-				[Time.parse(t), pwr.nil? || i >= pwr.length ? nil : pwr[i].to_f]
+				[Time.zone.parse(t), pwr.nil? || i >= pwr.length ? nil : pwr[i].to_f]
 			end
 		elsif data = params[:epoch_time].presence
 			data = [ data ] unless data.is_a? Enumerable
 			data = data.collect.with_index do |v, i|
 				break if v.nil? || v.empty?
 				q = v.split(',')
-				[Time.at(q[0].to_i, q[1].to_f/1000), pwr.nil? || pwr.length <= i ? nil : pwr[i].to_f]
+				[Time.zone.at(q[0].to_i + q[1].to_d / 1e9), pwr.nil? || pwr.length <= i ? nil : pwr[i].to_f]
 			end
 		end
 	end		
 
 	def node_params
-		params.require(:node).permit(:title)
+		params.require(:node).permit(:title, :time_zone)
 	end
 
 	def authenticate_user_from_token!

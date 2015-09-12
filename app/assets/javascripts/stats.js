@@ -14,7 +14,7 @@ function getData(remote_url, chart, data, options) {
   });
 }
 
-function drawRealTimeChart(remote_url, elementId, timeInterval) {
+function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
 
   if ($("#" + elementId).length == 0)
     return;
@@ -38,12 +38,12 @@ function drawRealTimeChart(remote_url, elementId, timeInterval) {
   var chart = new google.visualization.LineChart(document.getElementById(elementId));
   t = new Date();
   t.setMinutes(t.getMinutes() - timeInterval);
-  loadRealTimeData(remote_url, chart, data, options, timeInterval, t, elementId);
+  loadRealTimeData(remote_url, chart, data, options, timeInterval, t, elementId, offset);
 
-  window.realTimeIntervalId = setInterval(loadRealTimeData.bind(null, remote_url, chart, data, options, timeInterval, null, elementId), 1000 * 5);
+  window.realTimeIntervalId = setInterval(loadRealTimeData.bind(null, remote_url, chart, data, options, timeInterval, null, elementId, offset), 1000 * 5);
 }
 
-function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, elementId) {
+function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, elementId, offset) {
   if (time == null) {
     time = new Date();
     time.setSeconds(time.getSeconds() - 5);
@@ -60,7 +60,10 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
   .done(function(json){
     if (json.length > 0) {
       for(j = 0; j < json.length; j++) {
-        json[j][0] = new Date(json[j][0]);
+        d = new Date(json[j][0]);
+        utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+        nd = new Date(utc + (offset*1000));
+        json[j][0] = nd;
       }
       // console.log("Request successful!", json);
       while(data.getNumberOfRows() > 10 && data.getValue(0, 0) < timeLimit) data.removeRow(0); 

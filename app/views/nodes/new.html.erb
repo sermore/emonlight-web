@@ -1,4 +1,22 @@
+<div class="page-header">
+	<h2><%= @node.new_record? ? "Create" : "Edit" %> Node</h2>
+</div>
+
+<div class="panel panel-default">
+
+
 <%= simple_form_for @node do |f| %>
+	<div class="panel-body">
+
   <%= f.input :title %>
+  <%= f.input :time_zone %>
+
+ </div>
+
+  <div class="panel-footer">
   <%= f.button :submit %>
+  <%= link_to "Cancel", :back, {class: "btn btn-default"} %>
+  </div>
 <% end %>
+
+</div>

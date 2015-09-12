@@ -1,12 +1,37 @@
-<h3>Node <%= @node.title %></h3>
-<p>Title: <%= @node.title %> </p>
-<p>Token: <%= @node.authentication_token %> </p>
-<p>Pulse count: <%= @node.pulses.count %></p>
-<p>Starting from: <%= q = @node.pulses.order(:pulse_time).first; q.pulse_time unless q.nil? %>
-<p>Ending at: <%= q = @node.pulses.order(:pulse_time).last; q.pulse_time unless q.nil? %>
 
+<div class="page-header">
+	<h2>Node content</h2>
+</div>
 
-<%= form_tag import_node_path(@node), multipart: true do %>
-	<%= file_field_tag :file %>
-	<%= submit_tag "Import CSV" %>
-<% end %>
+<div class="panel panel-default">
+
+	<div class="panel-heading">
+		<h3 class="panel-title">Node content</h3>
+	</div>
+
+	<div class="panel-body">
+	
+		<p>Title: <%= @node.title %> </p>
+		<p>Time zone: <%= @node.time_zone %> </p>
+		<p>Token: <%= @node.authentication_token %> </p>
+		<p>Pulse count: <%= @node.pulses.count %></p>
+		<p>Starting from: <%= q = @node.pulses.order(:pulse_time).first; q.pulse_time unless q.nil? %></p>
+		<p>Ending at: <%= q = @node.pulses.order(:pulse_time).last; q.pulse_time unless q.nil? %></p>
+
+		<p>
+		<%= form_tag import_node_path(@node), multipart: true do %>
+			<%= file_field_tag :file %>
+			<%= submit_tag "Import CSV" %>
+		<% end %>
+		</p>
+
+	</div>
+
+  <div class="panel-footer">
+    <%= link_to "List", nodes_path, {class: "btn btn-default"} %>
+    <%= link_to "New", new_node_path, {class: "btn btn-default"} %>
+    <%= link_to "Edit", edit_node_path(@node), {class: "btn btn-default"} %>
+    <%= link_to "Delete", node_path(@node), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-default" %>
+  </div>
+
+</div>

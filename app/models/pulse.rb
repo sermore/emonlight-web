@@ -4,17 +4,20 @@ class Pulse < ActiveRecord::Base
 
 	belongs_to :node, dependent: :destroy
 
+	def self.tz
+		Time.zone.now.formatted_offset
+	end
+
 	def self.raw(current_node, start_period, end_period, len = 100, limit = nil, offset = nil)
-		#p = (Date.parse(end_period) - Date.parse(start_period)) / len
+		#p = (Time.zone.parse(end_period) - Time.zone.parse(start_period)) / len
 #		begin
-		start_v = DateTime.parse(start_period)
-		end_v = DateTime.parse(end_period)
+		start_v = Time.zone.parse(start_period)
+		end_v = Time.zone.parse(end_period)
 		len_v = Integer(len)
 		# step in seconds between values
 		step = (end_v - start_v) * 86400.0 / len_v
 #		rescue ArgumentError
 #		end
-		tz = Time.zone.now.formatted_offset
 		if step > 300
 			#.select("min(pulse_time) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
 			where('node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', { node: current_node, start_p: start_period, end_p: end_period })
@@ -28,9 +31,9 @@ class Pulse < ActiveRecord::Base
 			where(['node_id = :node and pulse_time > :start_p and pulse_time < :end_p', { node: current_node, start_p: start_period, end_p: end_period } ])
 			.limit(limit)
 			.offset(offset)
-			.select(:power, :pulse_time)
 			.order(:pulse_time)
-			.pluck(:pulse_time, :power)
+			.select("timezone('#{tz}', pulse_time) as pulse_time", :pulse_time)
+			.pluck("timezone('#{tz}', pulse_time) as pulse_time", :power)
 			# .map { |r| [ r.pulse_time, r.power ] }
 		end
 	end
@@ -55,13 +58,11 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.daily_mean(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_mean(current_node, "trunc(extract(epoch from timezone('#{tz}', pulse_time)) / 86400.0)", start_period, end_period)
 	end
 
 
 	def self.hourly_mean(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_mean(current_node, "trunc(extract(epoch from timezone('#{tz}', pulse_time)) / 3600.0)", start_period, end_period)
 =begin
 		find_by_sql([
@@ -78,7 +79,6 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.monthly_mean(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_mean(current_node, "extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time))", start_period, end_period)
 =begin
 		find_by_sql([
@@ -95,7 +95,6 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.yearly_mean(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_mean(current_node, "extract(year from timezone('#{tz}', pulse_time))", start_period, end_period)		
 =begin
 		find_by_sql([
@@ -121,7 +120,6 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.weekly(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_extract(current_node, 
 			"extract(dow from timezone('#{tz}', pulse_time))",
 			"(0.0 + count(pulse_time)) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(dow from timezone('#{tz}', pulse_time)) as time_period",
@@ -164,7 +162,6 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.daily(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_extract(current_node, 
 			"extract(hour from timezone('#{tz}', pulse_time))",
 			"(0.0 + count(pulse_time)) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(hour from timezone('#{tz}', pulse_time)) as time_period",
@@ -197,7 +194,6 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.monthly(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_extract(current_node, 
 			"extract(day from timezone('#{tz}', pulse_time))",
 			"(0.0 + count(pulse_time)) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(day from timezone('#{tz}', pulse_time)) as time_period",
@@ -231,7 +227,6 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.yearly(current_node, start_period = nil, end_period = nil)
-		tz = Time.zone.now.formatted_offset
 		_extract(current_node, 
 			"extract(month from timezone('#{tz}', pulse_time))",
 			"(0.0 + count(pulse_time)) / count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time)) as time_period",
@@ -273,9 +268,9 @@ class Pulse < ActiveRecord::Base
 			i = 0
 			CSV.foreach(file, :headers => false) do |row|
 				t1 = row[0].to_f + row[1].to_f / 1.0e9
-				# logger.debug "#{++i}: #{Time.at(row[0].to_i, row[1].to_f / 1.0e3).to_s(:db)}"
+				# logger.debug "#{++i}: #{Time.zone.at(row[0].to_i, row[1].to_f / 1.0e3).to_s(:db)}"
 				begin
-	 	 			q = Pulse.create!(node: current_node, :pulse_time => Time.at(row[0].to_i, row[1].to_f / 1.0e3), :power => row[2])
+	 	 			q = Pulse.create!(node: current_node, :pulse_time => Time.zone.at(row[0].to_i + row[1].to_d / 1.0e9), :power => row[2])
 	 	 		rescue
 	 	 		  	logger.error  "Error importing row #{i}: #{row}"
 	 	 		  	raise 
@@ -327,8 +322,8 @@ class Pulse < ActiveRecord::Base
 
 	def self.read_row_sec_msec(row)
 		#time_number = row[0].to_f + row[1].to_f / 1.0e9
-		#time = Time.at(row[0].to_i, row[1].to_i)
-		time, power = Time.at(row[0].to_i, row[1].to_f / 1.0e3), nil
+		#time = Time.zone.at(row[0].to_i, row[1].to_i)
+		time, power = Time.zone.at(row[0].to_i + row[1].to_d / 1.0e9), nil
 	end
 
 	def self.read_csv(data, &block)

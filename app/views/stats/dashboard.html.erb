@@ -1,7 +1,15 @@
 
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><%=current_node.title %> <small>Time zone <%= current_node.time_zone %></small></h3>
+  </div>
+  <div class="panel-body">
 
 <% for c in @charts %>
 	<div id="chart_<%=c%>_div"></div>
 <% end %>
+
+  </div>
+</div>
 
 <%= render "onload" %>

@@ -6,17 +6,18 @@ class StatsController < ApplicationController
   	@charts = "real_time", "daily", "weekly", "monthly", "yearly"
   end
 
-  def real_time_data
-  	time = params[:time] ? Time.parse(params[:time]) : Time.now - 5
-  	data = Pulse.where("node_id = :node and pulse_time > :time", { node: params[:node_id], time: time }).order(:pulse_time).pluck(:pulse_time, :power)
-  	render json: data
-  end
+	def real_time_data
+		time = params[:time] ? Time.zone.parse(params[:time]) : Time.zone.now - 5
+		data = Pulse.where("node_id = :node and pulse_time > :time", { node: params[:node_id], time: time }).order(:pulse_time).pluck(:pulse_time, :power)
+		render json: data
+	end
 
 	def yearly_data
-		now = params[:d].nil? ? Date.today + 1 : Date.parse(params[:d]) # @now # Date.today
+		t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
+		t0 = t1 << 12
 
-		mean_all, mean_last = Pulse.monthly_mean(current_node), Pulse.monthly_mean(current_node, now << 12, now)
-		all, last = Pulse.yearly(current_node), Pulse.yearly(current_node, now << 12, now)
+		mean_all, mean_last = Pulse.monthly_mean(current_node), Pulse.monthly_mean(current_node, t0, t1)
+		all, last = Pulse.yearly(current_node), Pulse.yearly(current_node, t0, t1)
 
 		data = Array.new(5) { Array.new(12, 0) }
 		data[0] = Date::MONTHNAMES[1..12]
@@ -28,10 +29,11 @@ class StatsController < ApplicationController
 	end
 
 	def monthly_data
-		now = params[:d].nil? ? Date.today + 1 : Date.parse(params[:d]) # @now # Date.today
+		t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
+		t0 = t1 << 1
 
-		mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, now << 1, now)
-		all, last = Pulse.monthly(current_node), Pulse.monthly(current_node, now << 1, now)
+		mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, t0, t1)
+		all, last = Pulse.monthly(current_node), Pulse.monthly(current_node, t0, t1)
 
 		data = Array.new(5) { Array.new(31, 0) }
 		data[0] = [*1..31]
@@ -43,10 +45,11 @@ class StatsController < ApplicationController
 	end
 
 	def weekly_data
-		now = params[:d].nil? ? Date.today + 1 : Date.parse(params[:d]) # @now # Date.today
+		t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
+		t0 = t1 - 7
 
-		mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, now - 7, now)
-		all, last = Pulse.weekly(current_node), Pulse.weekly(current_node, now - 7, now)
+		mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, t0, t1)
+		all, last = Pulse.weekly(current_node), Pulse.weekly(current_node, t0, t1)
 
 		data = Array.new(5) { Array.new(7, 0) }
 		data[0] = Date::DAYNAMES
@@ -58,10 +61,10 @@ class StatsController < ApplicationController
 	end
 
 	def daily_data
-		now = params[:d].nil? ? Date.today + 1 : Date.parse(params[:d]) # @now # Date.today
-		Time.zone = "Europe/Rome"
-		mean_all, mean_last = Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, now - 1, now)
-		all, last = Pulse.daily(current_node), Pulse.daily(current_node, now - 1, now)
+		t1 = params[:d].nil? ? Time.zone.now + 1 : Time.zone.parse(params[:d])
+		t0 = t1 - 86400
+		mean_all, mean_last = Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, t0 , t1)
+		all, last = Pulse.daily(current_node), Pulse.daily(current_node, t0, t1)
 
 		data = Array.new(5) { Array.new(24, 0) }
 		data[0] = [*0..23]

@@ -15,12 +15,13 @@ private
 			else
 				@current_node = current_user.node || Node.where(user: current_user).first
 			end
+			Time.zone = current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil?
 		end
 		redirect_to root_url if @current_node.nil?
 	end
 
 	def node_list
-		@nodes = Node.where(user: current_user).order(:title) if @nodes.nil?
+		@nodes ||= Node.where(user: current_user).order(:title)
 	end
 
 	helper_method :current_node, :node_list

@@ -1,9 +1,8 @@
 class Node < ActiveRecord::Base
-
   belongs_to :user
   has_many :pulses
-
 	before_save :ensure_authentication_token, :init_token
+  validates :title, presence: true
 
   def init_token
     authentication_token |= generate_authentication_token if new_record?

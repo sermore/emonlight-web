@@ -1,6 +1,7 @@
+
 <script type="text/javascript">
       if ($("#chart_real_time_div").length)
-        drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', 5);    
+        drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', 5, <%= Time.zone.now.utc_offset %>);
       else if (window.realTimeIntervalId)
         clearInterval(window.realTimeIntervalId);
       if ($("#chart_weekly_div").length)

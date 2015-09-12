@@ -4,6 +4,7 @@
 	<li class="dropdown">
 		<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">Manage Nodes<span class="caret"></span></a>
 		<ul class="dropdown-menu">
+			<li><%= link_to 'Nodes', nodes_path %></li>
 			<li><%= link_to 'New node', new_node_path %></li>
 <% for node in node_list %>
 			<li><%= link_to node.title, node_path(node) %></li>

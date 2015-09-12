@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+
+  authenticated :user do
+    root :to => "nodes#index", as: :authenticated_root
+  end
   root to: 'visitors#index'
   devise_for :users
   resources :users

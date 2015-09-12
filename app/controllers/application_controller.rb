@@ -15,7 +15,7 @@ private
 			else
 				@current_node = current_user.node || Node.where(user: current_user).first
 			end
-			Time.zone = current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil?
+			Time.zone = current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil? || @current_node.time_zone.empty?
 		end
 		redirect_to root_url if @current_node.nil?
 	end

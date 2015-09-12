@@ -7,7 +7,7 @@ class StatsController < ApplicationController
   end
 
 	def real_time_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/real_time_data", expires_in: 3.seconds) do
+		q = Rails.cache.fetch("#{current_node.cache_key}/real_time_data", expires_in: 1.seconds) do
 			time = params[:time] ? Time.zone.parse(params[:time]) : Time.zone.now - 5
 			data = Pulse.where("node_id = :node and pulse_time > :time", { node: params[:node_id], time: time }).order(:pulse_time).pluck(:pulse_time, :power)
 		end
@@ -15,7 +15,7 @@ class StatsController < ApplicationController
 	end
 
 	def yearly_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/yearly_data", expires_in: 2.hours) do
+		q = Rails.cache.fetch("#{current_node.cache_key}/yearly_data", expires_in: 1.hours) do
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 << 12
 
@@ -72,7 +72,7 @@ class StatsController < ApplicationController
 	end
 
 	def daily_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/daily_data", expires_in: 30.minutes) do
+		q = Rails.cache.fetch("#{current_node.cache_key}/daily_data", expires_in: 15.minutes) do
 			t1 = params[:d].nil? ? Time.zone.now + 1 : Time.zone.parse(params[:d])
 			t0 = t1 - 86400
 			mean_all, mean_last = Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, t0 , t1)

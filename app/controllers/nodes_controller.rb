@@ -10,21 +10,23 @@ class NodesController < ApplicationController
 
 	def new
 		@node = Node.new(user: current_user)
+		render 'edit'
 	end
 
 	def edit
 		@node = Node.where(id: params[:id], user: current_user).first
 		redirect_to root_url if @node.nil?
-		render 'new'
+		@current_node = @node
+		render 'edit'
 	end
 
 	def update
 		@node = Node.where(id: params[:id], user: current_user).first
 		if @node.update_attributes(node_params)
-			flash[:success] = "Node updated"
-			redirect_to @node
+			rows_imported = import
+			redirect_to nodes_url, notice: "Node '#{@node.title}' successfully updated" + (rows_imported.nil? ? "" : " and imported #{rows_imported} rows") + "."
 		else
-			render 'new'
+			render 'edit'
 		end
 	end
 
@@ -32,7 +34,8 @@ class NodesController < ApplicationController
 		@node = Node.new(node_params)
 		@node.user = current_user
 		if @node.save
-			redirect_to(@node, notice: "Node '#{@node.title}' successfully created.")
+			rows_imported = import
+			redirect_to nodes_url, notice: "Node '#{@node.title}' successfully created" + (rows_imported.nil? ? "" : " and imported #{rows_imported} rows") + "."
 			@nodes = nil
 		end
 	end
@@ -45,29 +48,35 @@ class NodesController < ApplicationController
   end
 
 	def show
-		@node = Node.where(id: params[:id], user: current_user).first
-		redirect_to root_url if @node.nil?
-		@current_node = @node
-	end
-
-	def import
-		if params[:id].nil? || params[:file].nil?
-			redirect_to node_path, alert: "Import failed." 
-		else
-			Pulse.import(params[:id], params[:file].path)
-			redirect_to node_path, notice: "Import completed."
-		end
+		# @node = Node.where(id: params[:id], user: current_user).first
+		# redirect_to root_url if @node.nil?
+		# @current_node = @node
+		edit
 	end
 
 	def read
 		# read node from authenticate_from_token
-		Time.zone = @current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil?
+		Time.zone = @current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil? || @current_node.time_zone.empty?
 		data = read_data
 		res = Pulse.read(@current_node, data, :read_simple, :read_row_simple) unless data.nil? || data.empty?
 		render res.nil? || res == 0 ? { plain: "FAIL", status: 400 } : { plain: "OK" }
 	end
 
 	private
+
+	def import
+		import = params[:node][:import]
+		rows_imported = Pulse.import(@node.id, import.path) unless import.nil?
+	end
+
+	# def import
+	# 	if params[:id].nil? || params[:file].nil?
+	# 		redirect_to node_path, alert: "Import failed." 
+	# 	else
+	# 		Pulse.import(params[:id], params[:file].path)
+	# 		redirect_to node_path, notice: "Import completed."
+	# 	end
+	# end
 
 	def read_data
 		pwr = params[:power].presence

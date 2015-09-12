@@ -7,6 +7,13 @@
 
 <% for c in @charts %>
 	<div id="chart_<%=c%>_div"></div>
+	<% if c == "real_time" %>
+	<div class="form-group" style="width:auto">
+	<label class="control-label" for="real-time-interval">Set time interval (min.)</label>
+	<input id="real-time-interval" type="text" style="width:auto; display:inline" class="form-control" size="5" value="5">
+  <button id="set-real-time-interval" class="btn btn-default" onclick="drawRealTimeChart('<%=real_time_data_stats_path(current_node)%>', 'chart_real_time_div', $('#real-time-interval').val(), <%= Time.zone.now.utc_offset %>)" type="button">Set</button>
+	</div>
+	<% end %>
 <% end %>
 
   </div>

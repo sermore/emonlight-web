@@ -1,3 +1,17 @@
 // Place all the styles related to the nodes controller here.
 // They will automatically be included in application.css.
 // You can use Sass (SCSS) here: http://sass-lang.com/
+
+.table > thead > tr > th, .table > thead > tr > td, .table > tbody > tr > th, .table > tbody > tr > td, .table > tfoot > tr > th, .table > tfoot > tr > td {
+		white-space: normal;	
+	&.right {
+		width: 1%;
+		white-space: nowrap;
+	}
+}
+
+.table {
+	th {
+		text-align: center;
+	}
+}

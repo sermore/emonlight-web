@@ -2,7 +2,7 @@ require 'csv'
 
 class Pulse < ActiveRecord::Base
 
-	belongs_to :node, dependent: :destroy
+	belongs_to :node
 
 	def self.tz
 		Time.zone.now.formatted_offset
@@ -323,7 +323,8 @@ class Pulse < ActiveRecord::Base
 	def self.read_row_sec_msec(row)
 		#time_number = row[0].to_f + row[1].to_f / 1.0e9
 		#time = Time.zone.at(row[0].to_i, row[1].to_i)
-		time, power = Time.zone.at(row[0].to_i + row[1].to_d / 1.0e9), nil
+		t = (row.is_a? Array) && row.length > 1 ? row[0].to_i + row[1].to_d / 1.0e9 : 0
+		time, power = t == 0 ? [ nil, nil ] : [ Time.zone.at(t), nil ]
 	end
 
 	def self.read_csv(data, &block)

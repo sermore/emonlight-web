@@ -7,7 +7,7 @@ function getData(remote_url, chart, data, options) {
   })
   .done(function(json){
     if (json.length > 0) {
-      console.log("Request successful!", json);
+      // console.log("Request successful!", json);
       data.addRows(json);
       chart.draw(data, options);
     }
@@ -16,7 +16,7 @@ function getData(remote_url, chart, data, options) {
 
 function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
 
-  if ($("#" + elementId).length == 0)
+  if ($("#" + elementId).length == 0 || timeInterval == null || timeInterval <= 0)
     return;
 
   // Create the data table.
@@ -40,6 +40,8 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
   t.setMinutes(t.getMinutes() - timeInterval);
   loadRealTimeData(remote_url, chart, data, options, timeInterval, t, elementId, offset);
 
+  if (window.realTimeIntervalId)
+    clearInterval(window.realTimeIntervalId);
   window.realTimeIntervalId = setInterval(loadRealTimeData.bind(null, remote_url, chart, data, options, timeInterval, null, elementId, offset), 1000 * 5);
 }
 
@@ -149,9 +151,9 @@ function drawMonthlyChart(remote_url, elementId) {
   var data = new google.visualization.DataTable();
   data.addColumn('number', 'Day');
   data.addColumn('number', 'Overall');
-  data.addColumn('number', 'Last Day');
+  data.addColumn('number', 'Last Month');
   data.addColumn('number', 'Overall Mean');
-  data.addColumn('number', 'Last Day Mean');
+  data.addColumn('number', 'Last Month Mean');
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
@@ -177,9 +179,9 @@ function drawYearlyChart(remote_url, elementId) {
   var data = new google.visualization.DataTable();
   data.addColumn('string', 'Month');
   data.addColumn('number', 'Overall');
-  data.addColumn('number', 'Last Day');
+  data.addColumn('number', 'Last Year');
   data.addColumn('number', 'Overall Mean');
-  data.addColumn('number', 'Last Day Mean');
+  data.addColumn('number', 'Last Year Mean');
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 

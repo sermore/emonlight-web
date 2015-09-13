@@ -36,6 +36,13 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
   */
   // Instantiate and draw our chart, passing in some options.
   var chart = new google.visualization.LineChart(document.getElementById(elementId));
+  window.evLsn = google.visualization.events.addListener(chart, 'ready', function() {
+    if (data.getNumberOfRows() > 0)
+      $("#chart_real_time_control").removeClass("hidden");
+    console.log('visible' + $("#chart_real_time_control"));
+    google.visualization.events.removeListener(window.evLsn);
+  });
+
   t = new Date();
   t.setMinutes(t.getMinutes() - timeInterval);
   loadRealTimeData(remote_url, chart, data, options, timeInterval, t, elementId, offset);

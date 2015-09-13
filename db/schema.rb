@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150907165553) do
+ActiveRecord::Schema.define(version: 20150913061314) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -34,8 +34,8 @@ ActiveRecord::Schema.define(version: 20150907165553) do
     t.integer  "node_id"
   end
 
+  add_index "pulses", ["node_id", "pulse_time"], name: "index_pulses_on_node_id_and_pulse_time", using: :btree
   add_index "pulses", ["node_id"], name: "index_pulses_on_node_id", using: :btree
-  add_index "pulses", ["pulse_time"], name: "index_pulses_on_pulse_time", using: :btree
 
   create_table "users", force: :cascade do |t|
     t.string   "email",                  default: "", null: false

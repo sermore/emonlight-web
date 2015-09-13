@@ -1,19 +1,21 @@
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title"><%=current_node.title %> <small>Time zone <%= current_node.time_zone %></small></h3>
+    <h3 class="panel-title pull-left">
+    	<%=current_node.title %> &nbsp; <small>Time zone <b><%= current_node.time_zone %></b></small>
+    </h3>
+    <h3 class="panel-title pull-right">
+   	  <%= link_to edit_node_path(current_node), class: "btn btn-default btn-xs" do %>
+   	  	<span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+   	  	Edit
+   	  <% end %>
+    </h3>
+    <div> &nbsp; </div>
   </div>
   <div class="panel-body">
 
 <% for c in @charts %>
-	<div id="chart_<%=c%>_div"></div>
-	<% if c == "real_time" %>
-	<div class="form-group" style="width:auto">
-	<label class="control-label" for="real-time-interval">Set time interval (min.)</label>
-	<input id="real-time-interval" type="text" style="width:auto; display:inline" class="form-control" size="5" value="5">
-  <button id="set-real-time-interval" class="btn btn-default" onclick="drawRealTimeChart('<%=real_time_data_stats_path(current_node)%>', 'chart_real_time_div', $('#real-time-interval').val(), <%= Time.zone.now.utc_offset %>)" type="button">Set</button>
-	</div>
-	<% end %>
+	<%= render partial: 'chart', locals: { chart: c } %>
 <% end %>
 
   </div>

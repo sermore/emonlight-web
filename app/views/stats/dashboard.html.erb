@@ -1,6 +1,7 @@
 
 <div class="panel panel-default">
-  <div class="panel-heading">
+
+  <div class="panel-heading clearfix">
     <h3 class="panel-title pull-left">
     	<%=current_node.title %> &nbsp; <small>Time zone <b><%= current_node.time_zone %></b></small>
     </h3>
@@ -10,15 +11,14 @@
    	  	Edit
    	  <% end %>
     </h3>
-    <div> &nbsp; </div>
   </div>
+
   <div class="panel-body">
-
-<% for c in @charts %>
-	<%= render partial: 'chart', locals: { chart: c } %>
-<% end %>
-
+		<% for c in @charts %>
+			<%= render partial: 'chart', locals: { chart: c } %>
+		<% end %>
   </div>
+
 </div>
 
 <%= render "onload" %>

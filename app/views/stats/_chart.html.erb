@@ -1,19 +1,19 @@
 <% case chart
 	when "real_time" %>
-<div id="chart_real_time_div"></div>
+<div class="chart" id="chart_real_time_div"></div>
 <div id="chart_real_time_control" class="hidden">
-	<div class="form-group" style="width:auto">
-		<label class="control-label" for="real-time-interval">Set time interval (min.)</label>
-		<input id="real-time-interval" type="text" style="width:auto; display:inline" class="form-control" size="5" value="5">
-	  <button id="set-real-time-interval" class="btn btn-default" onclick="drawRealTimeChart('<%=real_time_data_stats_path(current_node)%>', 'chart_real_time_div', $('#real-time-interval').val(), <%= Time.zone.now.utc_offset %>)" type="button">Set</button>
+	<div class="form-group form-group-sm" style="width:auto">
+		<%= label_tag "real-time-interval", "Set time interval in minutes", class: "control-label" %>
+		<%= text_field_tag "real-time-interval", 30, class: "form-control", size: 5, style: "width:auto; display:inline" %>
+		<%= button_tag "Set", type: :button, id: "set-real-time-interval", class: "btn btn-default btn-sm", onclick: "$(this).prop('disabled', true); drawRealTimeChart('#{real_time_data_stats_path(current_node)}', 'chart_real_time_div', $('#real-time-interval').val(), #{Time.zone.now.utc_offset})" %>
 	</div>
 </div>
 <% when "yearly" %>
-<div id="chart_yearly_div"></div>
+<div class="chart" id="chart_yearly_div"></div>
 <% when "monthly" %>
-<div id="chart_monthly_div"></div>
+<div class="chart" id="chart_monthly_div"></div>
 <% when "weekly" %>
-<div id="chart_weekly_div"></div>
+<div class="chart" id="chart_weekly_div"></div>
 <% when "daily" %>
-<div id="chart_daily_div"></div>
+<div class="chart" id="chart_daily_div"></div>
 <% end %>

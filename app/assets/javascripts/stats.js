@@ -39,7 +39,8 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
   window.evLsn = google.visualization.events.addListener(chart, 'ready', function() {
     if (data.getNumberOfRows() > 0)
       $("#chart_real_time_control").removeClass("hidden");
-    console.log('visible' + $("#chart_real_time_control"));
+    $("#set-real-time-interval").prop('disabled', false);
+    // console.log('visible' + $("#chart_real_time_control"));
     google.visualization.events.removeListener(window.evLsn);
   });
 
@@ -97,7 +98,7 @@ function drawWeeklyChart(remote_url, elementId) {
     hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
-    ,chartArea: { height: '45%' }
+    // ,chartArea: { height: '45%' }
     //,height: 400
   };
 
@@ -124,7 +125,7 @@ function drawDailyChart(remote_url, elementId) {
     hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
-    ,chartArea: { height: '45%' }
+    //,chartArea: { height: '45%' }
     //,height: 400
   };
 
@@ -151,7 +152,7 @@ function drawMonthlyChart(remote_url, elementId) {
     hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
-    ,chartArea: { height: '45%' }
+    //,chartArea: { height: '45%' }
     //,height: 400
   };
 
@@ -179,7 +180,7 @@ function drawYearlyChart(remote_url, elementId) {
     hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
-    ,chartArea: { height: '45%' }
+    //,chartArea: { height: '45%' }
     //,height: 400
   };
 

@@ -4,6 +4,11 @@ class StatsController < ApplicationController
 
   def dashboard
   	@charts = "real_time", "daily", "weekly", "monthly", "yearly"
+  	render "chart"
+  end
+
+  def chart
+  	@charts = [params[:chart]]
   end
 
 	def real_time_data
@@ -15,7 +20,8 @@ class StatsController < ApplicationController
 	end
 
 	def yearly_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/yearly_data", expires_in: 1.hours) do
+		opts = { force: params[:force] == "true", expires_in: 1.hours }
+		q = Rails.cache.fetch("#{current_node.cache_key}/yearly_data", opts) do
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 << 12
 
@@ -34,7 +40,8 @@ class StatsController < ApplicationController
 	end
 
 	def monthly_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/monthly_data", expires_in: 1.hours) do
+		opts = { force: params[:force] == "true", expires_in: 1.hours }
+		q = Rails.cache.fetch("#{current_node.cache_key}/monthly_data", opts) do
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 << 1
 
@@ -53,7 +60,8 @@ class StatsController < ApplicationController
 	end
 
 	def weekly_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/weekly_data", expires_in: 1.hours) do
+		opts = { force: params[:force] == "true", expires_in: 1.hours }
+		q = Rails.cache.fetch("#{current_node.cache_key}/weekly_data", opts) do
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 - 7
 
@@ -72,7 +80,8 @@ class StatsController < ApplicationController
 	end
 
 	def daily_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/daily_data", expires_in: 15.minutes) do
+		opts = { force: params[:force] == "true", expires_in: 15.minutes }
+		q = Rails.cache.fetch("#{current_node.cache_key}/daily_data", opts) do
 			t1 = params[:d].nil? ? Time.zone.now + 1 : Time.zone.parse(params[:d])
 			t0 = t1 - 86400
 			mean_all, mean_last = Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, t0 , t1)

@@ -6,6 +6,10 @@
     	<%=current_node.title %> &nbsp; <small>Time zone <b><%= current_node.time_zone %></b></small>
     </h3>
     <h3 class="panel-title pull-right">
+      <%= link_to url_for, class: "btn btn-default btn-xs", onclick: "window.forceRefresh = true" do %>
+        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+        Refresh
+      <% end %>
    	  <%= link_to edit_node_path(current_node), class: "btn btn-default btn-xs" do %>
    	  	<span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
    	  	Edit
@@ -21,4 +25,4 @@
 
 </div>
 
-<%= render "onload" %>
+<%= render partial: "onload" %>

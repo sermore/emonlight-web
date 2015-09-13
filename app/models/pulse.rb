@@ -324,7 +324,7 @@ class Pulse < ActiveRecord::Base
 		#time_number = row[0].to_f + row[1].to_f / 1.0e9
 		#time = Time.zone.at(row[0].to_i, row[1].to_i)
 		t = (row.is_a? Array) && row.length > 1 ? row[0].to_i + row[1].to_d / 1.0e9 : 0
-		time, power = t == 0 ? [ nil, nil ] : [ Time.zone.at(t), nil ]
+		time, power = t == 0 ? [ nil, nil ] : [ Time.zone.at(t), row.length > 2 ? row[2].to_f : nil ]
 	end
 
 	def self.read_csv(data, &block)
@@ -352,7 +352,7 @@ class Pulse < ActiveRecord::Base
 						i += 1
 					end
 	 	 		rescue
-	 	 		  	logger.error  "Error readin row #{i}: #{r}"
+	 	 		  	logger.error  "Error reading row #{i}: #{r}"
 	 	 		  	raise 
 	 	 		end
 			}

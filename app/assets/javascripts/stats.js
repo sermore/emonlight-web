@@ -1,8 +1,9 @@
 
-function getData(remote_url, chart, data, options) {
+function getData(remote_url, chart, data, options, force) {
   $.ajax({
     type:"get",
     url: remote_url,
+    data: { force: force == true },
     contentType: "application/json"
   })
   .done(function(json){
@@ -27,8 +28,8 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
   // Set chart options
   var options = {
     'title':'Real Time Power Usage (Watt)', 
-    vAxis: {title: 'Power'},
-    hAxis: {title: 'Time', textPosition: 'out'},    
+    // vAxis: {title: 'Power'},
+    // hAxis: {title: 'Time', textPosition: 'out'},    
     legend: 'none',
     }//,
 /*        'width':400,
@@ -94,8 +95,8 @@ function drawWeeklyChart(remote_url, elementId) {
   var options = {
     title : 'Weekly Power Usage (Watt/day)',
     legend: { position: 'bottom' },
-    vAxis: {title: 'Power'},
-    hAxis: {title: 'Time', textPosition: 'out'},
+    // vAxis: {title: 'Power'},
+    // hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
     // ,chartArea: { height: '45%' }
@@ -111,7 +112,7 @@ function drawWeeklyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options);
+  getData(remote_url, chart, data, options, window.forceRefresh);
 }
 
 function drawDailyChart(remote_url, elementId) {
@@ -121,8 +122,8 @@ function drawDailyChart(remote_url, elementId) {
   var options = {
     title : 'Daily Power Usage (Watt/hour)',
     legend: { position: 'bottom' },
-    vAxis: {title: 'Power'},
-    hAxis: {title: 'Time', textPosition: 'out'},
+    // vAxis: {title: 'Power'},
+    // hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
     //,chartArea: { height: '45%' }
@@ -138,7 +139,7 @@ function drawDailyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options);
+  getData(remote_url, chart, data, options, window.forceRefresh);
 }
 
 function drawMonthlyChart(remote_url, elementId) {
@@ -148,8 +149,8 @@ function drawMonthlyChart(remote_url, elementId) {
   var options = {
     title : 'Monthly Power Usage (Watt/day)',
     legend: { position: 'bottom' },
-    vAxis: {title: 'Power'},
-    hAxis: {title: 'Time', textPosition: 'out'},
+    // vAxis: {title: 'Power'},
+    // hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
     //,chartArea: { height: '45%' }
@@ -165,7 +166,7 @@ function drawMonthlyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options);
+  getData(remote_url, chart, data, options, window.forceRefresh);
 }
 
 
@@ -176,11 +177,11 @@ function drawYearlyChart(remote_url, elementId) {
   var options = {
     title : 'Yearly Power Usage (Watt/month)',
     legend: { position: 'bottom' },
-    vAxis: {title: 'Power'},
-    hAxis: {title: 'Time', textPosition: 'out'},
+    // vAxis: {title: 'Power'},
+    // hAxis: {title: 'Time', textPosition: 'out'},
     seriesType: 'bars',
     series: {2: {type: 'line'}, 3: {type: 'line'}}
-    //,chartArea: { height: '45%' }
+    // ,chartArea: { width: '90%', height: '60%' }
     //,height: 400
   };
 
@@ -193,5 +194,5 @@ function drawYearlyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options);
+  getData(remote_url, chart, data, options, window.forceRefresh);
 }

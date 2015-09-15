@@ -1,9 +1,9 @@
 class StatsController < ApplicationController
 
-  before_action :authenticate_user!, :current_node
+  before_action :authenticate_user!, :verify_current_node
 
   def dashboard
-  	@charts = "real_time", "daily", "weekly", "monthly", "yearly"
+  	@charts = current_node.dashboard
   	render "chart"
   end
 

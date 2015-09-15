@@ -15,7 +15,7 @@ class NodesController < ApplicationController
 
 	def edit
 		@node = Node.where(id: params[:id], user: current_user).first
-		redirect_to root_url if @node.nil?
+		redirect_to(root_url) and return if @node.nil?
 		@current_node = @node
 		render 'edit'
 	end
@@ -42,6 +42,7 @@ class NodesController < ApplicationController
 	
 	def destroy
 		@node = Node.where(id: params[:id], user: current_user).first
+		redirect_to(root_url) and return if @node.nil?
 		@node.destroy
 		flash[:success] = "Node deleted"
 		redirect_to nodes_url
@@ -99,7 +100,7 @@ class NodesController < ApplicationController
 	end		
 
 	def node_params
-		params.require(:node).permit(:title, :time_zone)
+		params.require(:node).permit(:title, :time_zone, dashboard: [])
 	end
 
 	def authenticate_user_from_token!

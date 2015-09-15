@@ -3,10 +3,8 @@ class Node < ActiveRecord::Base
   has_many :pulses, dependent: :delete_all
 	before_save :ensure_authentication_token, :init_token
   validates :title, presence: true
-
-  def dashboard
-    ['real_time', 'yearly']
-  end
+  serialize :dashboard, Array
+  after_initialize { dashboard = ['real_time', 'daily', 'weekly', 'monthly', 'yearly'] }
 
   def pulse_count
     self.pulses.count

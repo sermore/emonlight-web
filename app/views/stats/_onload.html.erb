@@ -1,18 +1,18 @@
-
+<% offset = Time.zone.now.utc_offset %>
 <script type="text/javascript">
       if ($("#chart_real_time_div").length) {
         var t = $('#real-time-interval').val();
         t = t == null || t <= 0 ? 30 : t;
-        drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', t, <%= Time.zone.now.utc_offset %>);
+        drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', t, <%= offset %>);
       }
       else if (window.realTimeIntervalId)
         clearInterval(window.realTimeIntervalId);
       if ($("#chart_weekly_div").length)
-        drawWeeklyChart("<%=weekly_data_stats_path(current_node)%>", 'chart_weekly_div');
+        drawWeeklyChart("<%=weekly_data_stats_path(current_node)%>", 'chart_weekly_div', <%= offset %>);
       if ($("#chart_daily_div").length)
-        drawDailyChart("<%=daily_data_stats_path(current_node)%>", 'chart_daily_div');
+        drawDailyChart("<%=daily_data_stats_path(current_node)%>", 'chart_daily_div', <%= offset %>);
       if ($("#chart_monthly_div").length)
-        drawMonthlyChart("<%=monthly_data_stats_path(current_node)%>", 'chart_monthly_div');
+        drawMonthlyChart("<%=monthly_data_stats_path(current_node)%>", 'chart_monthly_div', <%= offset %>);
       if ($("#chart_yearly_div").length)
-        drawYearlyChart("<%=yearly_data_stats_path(current_node)%>", 'chart_yearly_div');
+        drawYearlyChart("<%=yearly_data_stats_path(current_node)%>", 'chart_yearly_div', <%= offset %>);
 </script>

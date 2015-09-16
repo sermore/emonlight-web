@@ -1,5 +1,12 @@
 
-function getData(remote_url, chart, data, options, force) {
+function getDateTZ(json, offset) {
+  d = new Date(json);
+  utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  nd = new Date(utc + (offset*1000));
+  return nd;
+}
+
+function getData(remote_url, chart, data, options, force, offset) {
   $.ajax({
     type:"get",
     url: remote_url,
@@ -7,9 +14,10 @@ function getData(remote_url, chart, data, options, force) {
     contentType: "application/json"
   })
   .done(function(json){
-    if (json.length > 0) {
-      // console.log("Request successful!", json);
-      data.addRows(json);
+    if (json.data.length > 0) {
+      console.log("Request successful!", json);
+      data.addRows(json.data);
+      options['title'] += ' - Last update ' + getDateTZ(json.last_update, offset).toLocaleTimeString();
       chart.draw(data, options);
     }
   });
@@ -72,10 +80,7 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
   .done(function(json){
     if (json.length > 0) {
       for(j = 0; j < json.length; j++) {
-        d = new Date(json[j][0]);
-        utc = d.getTime() + (d.getTimezoneOffset() * 60000);
-        nd = new Date(utc + (offset*1000));
-        json[j][0] = nd;
+        json[j][0] = getDateTZ(json[j][0], offset);
       }
       // console.log("Request successful!", json);
       while(data.getNumberOfRows() > 10 && data.getValue(0, 0) < timeLimit) data.removeRow(0); 
@@ -88,7 +93,7 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
   });
 }
 
-function drawWeeklyChart(remote_url, elementId) {
+function drawWeeklyChart(remote_url, elementId, offset) {
   if ($("#" + elementId).length == 0)
     return;
 
@@ -112,10 +117,10 @@ function drawWeeklyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options, window.forceRefresh);
+  getData(remote_url, chart, data, options, window.forceRefresh, offset);
 }
 
-function drawDailyChart(remote_url, elementId) {
+function drawDailyChart(remote_url, elementId, offset) {
   if ($("#" + elementId).length == 0)
     return;
 
@@ -139,10 +144,10 @@ function drawDailyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options, window.forceRefresh);
+  getData(remote_url, chart, data, options, window.forceRefresh, offset);
 }
 
-function drawMonthlyChart(remote_url, elementId) {
+function drawMonthlyChart(remote_url, elementId, offset) {
   if ($("#" + elementId).length == 0)
     return;
 
@@ -166,11 +171,11 @@ function drawMonthlyChart(remote_url, elementId) {
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
 
-  getData(remote_url, chart, data, options, window.forceRefresh);
+  getData(remote_url, chart, data, options, window.forceRefresh, offset);
 }
 
 
-function drawYearlyChart(remote_url, elementId) {
+function drawYearlyChart(remote_url, elementId, offset) {
   if ($("#" + elementId).length == 0)
     return;
 
@@ -193,6 +198,10 @@ function drawYearlyChart(remote_url, elementId) {
   data.addColumn('number', 'Last Year Mean');
 
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
+  // google.visualization.events.addListener(chart, 'ready', function() {
+  //     $("#" + elementId + "_overlay").text("Last updated on " + new Date().toISOString());
+  //   // console.log('visible' + $("#chart_real_time_control"));
+  // });
 
-  getData(remote_url, chart, data, options, window.forceRefresh);
+  getData(remote_url, chart, data, options, window.forceRefresh, offset);
 }

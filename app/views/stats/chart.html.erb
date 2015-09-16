@@ -19,8 +19,9 @@
   </div>
 
   <div class="panel-body">
-		<% for c in @charts %>
+		<% @charts.each.with_index do |c, i| %>
 			<%= render partial: 'chart', locals: { chart: c } %>
+      <% if i < @charts.length - 1 %><hr><% end %>
 		<% end %>
   </div>
 

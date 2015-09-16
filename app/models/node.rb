@@ -1,7 +1,7 @@
 class Node < ActiveRecord::Base
   belongs_to :user
   has_many :pulses, dependent: :delete_all
-	before_save :ensure_authentication_token, :init_token
+	before_save :ensure_authentication_token, :init_token, :clean_dashboard
   validates :title, presence: true
   serialize :dashboard, Array
   after_initialize { dashboard = ['real_time', 'daily', 'weekly', 'monthly', 'yearly'] }
@@ -37,6 +37,10 @@ class Node < ActiveRecord::Base
       token = Devise.friendly_token
       break token unless Node.where(authentication_token: token).first
     end
+  end
+
+  def clean_dashboard
+    dashboard.reject! { |c| c.empty? }
   end
 
 end

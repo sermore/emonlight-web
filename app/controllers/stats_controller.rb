@@ -98,4 +98,38 @@ class StatsController < ApplicationController
   	render json: q
 	end
 
+	def time_series_data
+		t1 = params[:end_p].nil? ? current_node.pulses.last.pulse_time : Time.zone.parse(params[:end_p])
+		t0 = params[:start_p].nil? ? current_node.pulses.first.pulse_time : Time.zone.parse(params[:start_p])
+		opts = { force: params[:force] == "true", expires_in: 15.minutes }
+		q = Rails.cache.fetch("#{current_node.cache_key}/raw_data/#{t0}/#{t1}", opts) do
+			rows = Pulse.raw(current_node, t0, t1, 400)
+			columns = [ {id: 'time', label: 'Time', type: 'datetime'}, {id: 'power', label: 'Power', type: 'number'} ]
+			to_data_table(columns, rows)
+		end
+  	render plain: q
+	end
+
+	def time_interval
+		p = current_node.pulses.order(:pulse_time).first
+		t0 = p.pulse_time if p
+		p = current_node.pulses.order(:pulse_time).last
+		t1 = p.pulse_time if p
+		render json: { time_start: t0, time_end: t1 }
+	end
+
+private
+
+	def to_data_table(columns, rows)
+		Jbuilder.encode do |json|
+			json.cols columns
+			json.rows rows do |row|
+				json.c row do |val|
+					json.v (val.is_a?(Time) ? "Date(#{val.year},#{val.month - 1},#{val.day},#{val.hour},#{val.min},#{val.sec},#{(val.usec/1000).to_i})" : val)
+				end
+			end
+		end
+	end
+
 end
+

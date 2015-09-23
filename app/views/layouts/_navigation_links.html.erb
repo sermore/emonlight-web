@@ -21,6 +21,7 @@
 			<li><%= link_to 'Weekly stats', chart_stats_path(current_node, :weekly) %></li>
 			<li><%= link_to 'Monthly stats', chart_stats_path(current_node, :monthly) %></li>
 			<li><%= link_to 'Yearly stats', chart_stats_path(current_node, :yearly) %></li>
+			<li><%= link_to 'Time Series stats', chart_stats_path(current_node, :time_series) %></li>
 		</ul>
 	</li>
 <% end #if current_node %>

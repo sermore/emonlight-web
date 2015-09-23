@@ -2,13 +2,16 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= content_for?(:title) ? yield(:title) : "Emonlight Web" %></title>
-    <meta name="description" content="<%= content_for?(:description) ? yield(:description) : "Emonlight Web" %>">
+    <title><%= content_for?(:title) ? yield(:title) : "Emonlight" %></title>
+    <meta name="description" content="<%= content_for?(:description) ? yield(:description) : "Emonlight" %>">
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
     <%= javascript_include_tag "//www.google.com/jsapi" %>
+    <%#= javascript_include_tag 'jquery.mousewheel.min', 'data-turbolinks-track' => true %>
+    <%#= javascript_include_tag 'jQDateRangeSlider-withRuler-min', 'data-turbolinks-track' => true %>
+    <%#= stylesheet_link_tag 'iThing', media: 'all', 'data-turbolinks-track' => true %>
     <script type="text/javascript">
-      google.load('visualization', '1.0', {'packages':['corechart']});
+      google.load('visualization', '1.0', {'packages':['corechart', 'controls']});
     </script>
 
     <%= yield :head %>

@@ -1,7 +1,6 @@
 require 'csv'
 
 class Pulse < ActiveRecord::Base
-
 	belongs_to :node
 
 	def self.tz
@@ -11,21 +10,21 @@ class Pulse < ActiveRecord::Base
 	def self.raw(current_node, start_period, end_period, len = 100, limit = nil, offset = nil)
 		#p = (Time.zone.parse(end_period) - Time.zone.parse(start_period)) / len
 #		begin
-		start_v = Time.zone.parse(start_period)
-		end_v = Time.zone.parse(end_period)
+		start_v = start_period #Time.zone.parse(start_period)
+		end_v = end_period #Time.zone.parse(end_period)
 		len_v = Integer(len)
 		# step in seconds between values
-		step = (end_v - start_v) * 86400.0 / len_v
+		step = (end_v - start_v) / len_v
 #		rescue ArgumentError
 #		end
 		if step > 300
 			#.select("min(pulse_time) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
-			where('node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', { node: current_node, start_p: start_period, end_p: end_period })
-			.group("trunc(extract(epoch from timezone('#{tz}', pulse_time))) / #{step})")
+			where('node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', { node: current_node, start_p: start_v, end_p: end_v })
+			.group("trunc(extract(epoch from timezone('#{tz}', pulse_time)) / #{step})")
 			.limit(limit)
 			.offset(offset)
-			.order("trunc(extract(epoch from timezone('#{tz}', pulse_time))) / #{step})")
-			.pluck("min(timezone('#{tz}', pulse_time))) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
+			.order("trunc(extract(epoch from timezone('#{tz}', pulse_time)) / #{step})")
+			.pluck("min(timezone('#{tz}', pulse_time)) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
 			# .map { |r| [ r.pulse_time, r.power ] }
 		else
 			where(['node_id = :node and pulse_time > :start_p and pulse_time < :end_p', { node: current_node, start_p: start_period, end_p: end_period } ])
@@ -229,7 +228,7 @@ class Pulse < ActiveRecord::Base
 	def self.yearly(current_node, start_period = nil, end_period = nil)
 		_extract(current_node, 
 			"extract(month from timezone('#{tz}', pulse_time))",
-			"(0.0 + count(pulse_time)) / count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time)) as time_period",
+			"(0.0 + count(pulse_time)) / count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
 			"extract(month from timezone('#{tz}', pulse_time))",
 			start_period, end_period
 			)

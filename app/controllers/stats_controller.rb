@@ -12,8 +12,8 @@ class StatsController < ApplicationController
   end
 
 	def real_time_data
-		q = Rails.cache.fetch("#{current_node.cache_key}/real_time_data", expires_in: 1.seconds) do
-			time = params[:time] ? Time.zone.parse(params[:time]) : Time.zone.now - 5
+		time = params[:time] ? Time.zone.parse(params[:time]) : Time.zone.now - 5
+		q = Rails.cache.fetch("#{current_node.cache_key}/real_time_data/#{time}", expires_in: 4.seconds) do
 			data = Pulse.where("node_id = :node and pulse_time > :time", { node: params[:node_id], time: time }).order(:pulse_time).pluck(:pulse_time, :power)
 		end
 		render json: q
@@ -25,6 +25,13 @@ class StatsController < ApplicationController
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 << 12
 
+			columns = [ {id: 'month', label: 'Month', type: 'string'}, 
+				{id: 'power_overall', label: 'Overall', type: 'number'},
+				{id: 'power_last', label: 'Last Year', type: 'number'},
+				{id: 'mean_overall', label: 'Overall Mean', type: 'number'},
+				{id: 'mean_last', label: 'Last Year Mean', type: 'number'},
+			]
+
 			mean_all, mean_last = Pulse.monthly_mean(current_node), Pulse.monthly_mean(current_node, t0, t1)
 			all, last = Pulse.yearly(current_node), Pulse.yearly(current_node, t0, t1)
 
@@ -34,7 +41,7 @@ class StatsController < ApplicationController
 			last.each { |w| data[2][w[0].to_i - 1] = w[1] }
 			data[3] = Array.new(12, mean_all.to_f)
 			data[4] = Array.new(12, mean_last.to_f)
-			{ last_update: Time.zone.now, data: data.transpose }
+			{ last_update: Time.zone.now, data: to_data_table(columns, data.transpose) }
 		end
   	render json: q
 	end
@@ -45,6 +52,13 @@ class StatsController < ApplicationController
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 << 1
 
+			columns = [ {id: 'day_month', label: 'Day', type: 'string'}, 
+				{id: 'power_overall', label: 'Overall', type: 'number'},
+				{id: 'power_last', label: 'Last Month', type: 'number'},
+				{id: 'mean_overall', label: 'Overall Mean', type: 'number'},
+				{id: 'mean_last', label: 'Last Month Mean', type: 'number'},
+			]
+
 			mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, t0, t1)
 			all, last = Pulse.monthly(current_node), Pulse.monthly(current_node, t0, t1)
 
@@ -54,7 +68,7 @@ class StatsController < ApplicationController
 			last.each { |w| data[2][w[0].to_i - 1] = w[1] }
 			data[3] = Array.new(31, mean_all.to_f)
 			data[4] = Array.new(31, mean_last.to_f)
-			{ last_update: Time.zone.now, data: data.transpose }
+			{ last_update: Time.zone.now, data: to_data_table(columns, data.transpose) }
 		end
   	render json: q
 	end
@@ -65,6 +79,13 @@ class StatsController < ApplicationController
 			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
 			t0 = t1 - 7
 
+			columns = [ {id: 'day_week', label: 'Day of the Week', type: 'string'}, 
+				{id: 'power_overall', label: 'Overall', type: 'number'},
+				{id: 'power_last', label: 'Last 7 days', type: 'number'},
+				{id: 'mean_overall', label: 'Overall Mean', type: 'number'},
+				{id: 'mean_last', label: 'Last 7 days Mean', type: 'number'},
+			]
+
 			mean_all, mean_last = Pulse.daily_mean(current_node), Pulse.daily_mean(current_node, t0, t1)
 			all, last = Pulse.weekly(current_node), Pulse.weekly(current_node, t0, t1)
 
@@ -74,7 +95,7 @@ class StatsController < ApplicationController
 			last.each { |w| data[2][w[0].to_i] = w[1] }
 			data[3] = Array.new(7, mean_all.to_f)
 			data[4] = Array.new(7, mean_last.to_f)
-			{ last_update: Time.zone.now, data: data.transpose }
+			{ last_update: Time.zone.now, data: to_data_table(columns, data.transpose) }
 		end
   	render json: q
 	end
@@ -84,6 +105,14 @@ class StatsController < ApplicationController
 		q = Rails.cache.fetch("#{current_node.cache_key}/daily_data", opts) do
 			t1 = params[:d].nil? ? Time.zone.now + 1 : Time.zone.parse(params[:d])
 			t0 = t1 - 86400
+
+			columns = [ {id: 'hour', label: 'Hour', type: 'string'}, 
+				{id: 'power_overall', label: 'Overall', type: 'number'},
+				{id: 'power_last', label: 'Last Day', type: 'number'},
+				{id: 'mean_overall', label: 'Overall Mean', type: 'number'},
+				{id: 'mean_last', label: 'Last Day Mean', type: 'number'},
+			]
+
 			mean_all, mean_last = Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, t0 , t1)
 			all, last = Pulse.daily(current_node), Pulse.daily(current_node, t0, t1)
 
@@ -93,7 +122,7 @@ class StatsController < ApplicationController
 			last.each { |w| data[2][w[0].to_i] = w[1] }
 			data[3] = Array.new(24, mean_all.to_f)
 			data[4] = Array.new(24, mean_last.to_f)
-			{ last_update: Time.zone.now, data: data.transpose }
+			{ last_update: Time.zone.now, data: to_data_table(columns, data.transpose) }
 		end
   	render json: q
 	end

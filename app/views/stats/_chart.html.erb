@@ -1,22 +1,44 @@
 <% case chart
 	when "real_time" %>
+
 <div class="chart" id="chart_real_time_div"></div>
-<div id="chart_real_time_control" class="hidden">
-	<div class="form-group form-group-sm" style="width:auto">
-		<%= label_tag "real-time-interval", "Set time interval in minutes", class: "control-label" %>
-		<%= text_field_tag "real-time-interval", 30, class: "form-control", size: 5, style: "width:auto; display:inline" %>
-		<%= button_tag "Set", type: :button, id: "set-real-time-interval", class: "btn btn-default btn-sm", onclick: "$(this).prop('disabled', true); drawRealTimeChart('#{real_time_data_stats_path(current_node)}', 'chart_real_time_div', $('#real-time-interval').val(), #{Time.zone.now.utc_offset})" %>
-	</div>
+<div id="chart_real_time_control" class=" btn-group hidden">
+	<!-- <div class="btn-group"> -->
+		<button id="real_time_btn" type="button" class="btn btn-default btn-sm">Default</button>
+	  <button id="real_time_dropdown" type="button" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    <span class="caret"></span>
+	    <span class="sr-only">Toggle Dropdown</span>
+	  </button>
+	  <ul id="real_time_actions" data-default="2" class="dropdown-menu">
+	    <li><a href="#">5</a></li>
+	    <li><a href="#">10</a></li>
+	    <li><a href="#">30</a></li>
+	    <li><a href="#">60</a></li>
+	    <li><a href="#">120</a></li>
+	    <li><a href="#">240</a></li>
+	  </ul>
+	<!-- </div> -->
 </div>
+
 <% when "yearly" %>
+
 <div class="chart" id="chart_yearly_div"></div>
+
 <% when "monthly" %>
+
 <div class="chart" id="chart_monthly_div"></div>
+
 <% when "weekly" %>
+
 <div class="chart" id="chart_weekly_div"></div>
+
 <% when "daily" %>
+
 <div class="chart" id="chart_daily_div"></div>
+
 <% when "time_series" %>
+
 <div id="chart_time_series_div"></div>
 <div id="slider_div"></div>
+
 <% end %>

@@ -1,9 +1,14 @@
 <% offset = Time.zone.now.utc_offset %>
 <script type="text/javascript">
   if ($("#chart_real_time_div").length) {
-    var t = $('#real-time-interval').val();
-    t = t == null || t <= 0 ? 30 : t;
-    drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', t, <%= offset %>);
+    $("#real_time_actions").delegate("a", "click", function(i) {
+      var t = $(this).text();
+      // console.log(t);
+      $("#real_time_btn").text("Time interval " + t + " min"); 
+      drawRealTimeChart("<%=real_time_data_stats_path(current_node)%>", 'chart_real_time_div', t, <%= offset %>);
+    });
+    var i = $("#real_time_actions").data("default");
+    $("#real_time_actions a")[i].click();
   }
   else if (window.realTimeIntervalId)
     clearInterval(window.realTimeIntervalId);

@@ -62,6 +62,8 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
 }
 
 function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, elementId, offset) {
+  if (window.real_time_callback_pending)
+    return;
   if (time == null) {
     time = new Date(new Date().getTime() - 5000);
   }
@@ -71,7 +73,7 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
     type:"get",
     url: remote_url,
     data:{ time: time },
-    timeout: 5000,
+    timeout: 25000,
     contentType: "application/json"
   })
   .done(function(json){
@@ -87,6 +89,9 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
     if ($("#" + elementId).length == 0) {
       clearInterval(window.realTimeIntervalId);
     }
+  })
+  .always(function() {
+    window.real_time_callback_pending = false;
   });
 }
 

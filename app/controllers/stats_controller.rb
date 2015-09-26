@@ -186,11 +186,13 @@ class StatsController < ApplicationController
 			]
 
 			tz = Time.zone.now.formatted_offset
+			q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) between 8 and 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
+			q_f2 = "(extract(hour from timezone('#{tz}', pulse_time)) between 19 and 24 or extract(hour from timezone('#{tz}', pulse_time)) between 0 and 8) and ((extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5) or (extract(dow from timezone('#{tz}', pulse_time)) not between 1 and 5) or (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
 			mean = Pulse.daily_mean(current_node)/1000.0
-			mean_f1 = Pulse.daily_slot_per_month_mean(current_node, "extract(hour from timezone('#{tz}', pulse_time)) between 8 and 18 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5", t0, t1)/1000.0
-			mean_f2 = Pulse.daily_slot_per_month_mean(current_node, "((extract(hour from timezone('#{tz}', pulse_time)) between 18 and 24 or extract(hour from timezone('#{tz}', pulse_time)) between 0 and 7) and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5) or (extract(dow from timezone('#{tz}', pulse_time)) not between 1 and 5)", t0, t1)/1000.0
-			f1 = Pulse.daily_slot_per_month(current_node, "extract(hour from timezone('#{tz}', pulse_time)) between 8 and 18 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5", t0, t1)
-			f2 = Pulse.daily_slot_per_month(current_node, "((extract(hour from timezone('#{tz}', pulse_time)) between 18 and 24 or extract(hour from timezone('#{tz}', pulse_time)) between 0 and 7) and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5) or (extract(dow from timezone('#{tz}', pulse_time)) not between 1 and 5)", t0, t1)
+			mean_f1 = Pulse.daily_slot_per_month_mean(current_node, q_f1, t0, t1)/1000.0
+			mean_f2 = Pulse.daily_slot_per_month_mean(current_node, q_f2, t0, t1)/1000.0
+			f1 = Pulse.daily_slot_per_month(current_node, q_f1, t0, t1)
+			f2 = Pulse.daily_slot_per_month(current_node, q_f2, t0, t1)
 
 			d = Time.zone.today << 11
 			data = Array.new(7) { Array.new(12, 0) }

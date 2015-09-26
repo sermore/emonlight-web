@@ -15,7 +15,7 @@ function getData(remoteUrl, chart, options, params, offset) {
   })
   .done(function(json){
     if (json.data.length > 0) {
-      console.log("Request successful!", json);
+      // console.log("Request successful!", json);
       var data = new google.visualization.DataTable(json.data);
       options['title'] += ' - Last update ' + getDateTZ(json.last_update, offset).toLocaleTimeString();
       chart.draw(data, options);
@@ -35,7 +35,7 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
 
   // Set chart options
   var options = {
-    'title':'Real Time Power Usage (Watt)', 
+    'title':'Real Time Power Usage (W)', 
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},    
     legend: 'none',
@@ -43,7 +43,7 @@ function drawRealTimeChart(remote_url, elementId, timeInterval, offset) {
 /*        'width':400,
   'height':300};
   */
-  // Instantiate and draw our chart, passing in some options.
+  rtFormatter = new google.visualization.NumberFormat({fractionDigits: 2});
   var chart = new google.visualization.LineChart(document.getElementById(elementId));
   window.evLsn = google.visualization.events.addListener(chart, 'ready', function() {
     if (data.getNumberOfRows() > 0)
@@ -84,6 +84,7 @@ function loadRealTimeData(remote_url, chart, data, options, timeInterval, time, 
       // console.log("Request successful!", json);
       while(data.getNumberOfRows() > 10 && data.getValue(0, 0) < timeLimit) data.removeRow(0); 
       data.addRows(json);
+      window.rtFormatter.format(data, 1);
       chart.draw(data, options);            
     }
     if ($("#" + elementId).length == 0) {
@@ -100,7 +101,7 @@ function drawWeeklyChart(remote_url, elementId, offset) {
     return;
 
   var options = {
-    title : 'Weekly Power Usage (Watt/day)',
+    title : 'Weekly Power Usage (kW/day)',
     legend: { position: 'bottom' },
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},
@@ -120,7 +121,7 @@ function drawDailyChart(remote_url, elementId, offset) {
     return;
 
   var options = {
-    title : 'Daily Power Usage (Watt/hour)',
+    title : 'Daily Power Usage (kW/hour)',
     legend: { position: 'bottom' },
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},
@@ -140,7 +141,7 @@ function drawMonthlyChart(remote_url, elementId, offset) {
     return;
 
   var options = {
-    title : 'Monthly Power Usage (Watt/day)',
+    title : 'Monthly Power Usage (kW/day)',
     legend: { position: 'bottom' },
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},
@@ -155,13 +156,12 @@ function drawMonthlyChart(remote_url, elementId, offset) {
   getData(remote_url, chart, options, { force: window.forceRefresh == true }, offset);
 }
 
-
 function drawYearlyChart(remote_url, elementId, offset) {
   if ($("#" + elementId).length == 0)
     return;
 
   var options = {
-    title : 'Yearly Power Usage (Watt/month)',
+    title : 'Yearly Power Usage (kW/month)',
     legend: { position: 'bottom' },
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},
@@ -180,6 +180,25 @@ function drawYearlyChart(remote_url, elementId, offset) {
   getData(remote_url, chart, options, { force: window.forceRefresh == true }, offset);
 }
 
+function drawDailyPerMonthChart(remoteUrl, elementId, offset) {
+  if ($("#" + elementId).length == 0)
+    return;
+
+  var options = {
+    title : 'Daily Power Usage (kW/day)',
+    legend: { position: 'bottom' },
+    // vAxis: {title: 'Power'},
+    // hAxis: {title: 'Time', textPosition: 'out'},
+    isStacked: true,
+    seriesType: 'bars',
+    series: {2: {type: 'line'}, 3: {type: 'line'}, 4: {type: 'line'}, 5: {type: 'line'}}
+    // ,chartArea: { width: '90%', height: '60%' }
+    //,height: 400
+  };
+  var chart = new google.visualization.ComboChart(document.getElementById(elementId));
+  getData(remoteUrl, chart, options, { force: window.forceRefresh == true }, offset);
+}
+
 var TS = {
   define: function(chartId, sliderId, bound_start, bound_end, def_start, def_end) {
     var monthNames = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
@@ -188,7 +207,7 @@ var TS = {
       'chartType': 'LineChart',
       'containerId': chartId,
       'options': {
-        'title':'Power Usage (Watt)', 
+        'title':'Power Usage (W)', 
         'legend': 'none'
       }
     });

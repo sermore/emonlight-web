@@ -37,8 +37,9 @@ class Pulse < ActiveRecord::Base
 		end
 	end
 
-	def self._mean(current_node, group_clause, start_period = nil, end_period = nil)
+	def self._mean(current_node, group_clause, start_period = nil, end_period = nil, where_clause = nil)
 		subq = Pulse.where(node: current_node)
+			.where(where_clause)
 			.group(group_clause)
 			.select('count(*) as power')
 		subq = subq.where('pulse_time >= :start_p and pulse_time < :end_p', { start_p: start_period, end_p: end_period }) if start_period != nil && end_period != nil
@@ -109,8 +110,13 @@ class Pulse < ActiveRecord::Base
 =end
 	end
 
-	def self._extract(current_node, group_clause, select_clause, order_clause, start_period = nil, end_period = nil)
+	def self.daily_slot_per_month_mean(current_node, slot_clause, start_period = nil, end_period = nil)
+		_mean(current_node, "trunc(extract(epoch from timezone('#{tz}', pulse_time)) / 86400.0)", start_period, end_period, slot_clause)
+	end		
+
+	def self._extract(current_node, group_clause, select_clause, order_clause, start_period = nil, end_period = nil, where_clause = nil)
 		subq = Pulse.where(node: current_node)
+			.where(where_clause)
 			.group(group_clause)
 			.select(select_clause)
 			.order(order_clause)
@@ -121,7 +127,7 @@ class Pulse < ActiveRecord::Base
 	def self.weekly(current_node, start_period = nil, end_period = nil)
 		_extract(current_node, 
 			"extract(dow from timezone('#{tz}', pulse_time))",
-			"(0.0 + count(pulse_time)) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(dow from timezone('#{tz}', pulse_time)) as time_period",
+			"count(pulse_time)/1000.0 / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(dow from timezone('#{tz}', pulse_time)) as time_period",
 			"extract(dow from timezone('#{tz}', pulse_time))",
 			start_period, end_period
 			)
@@ -162,9 +168,9 @@ class Pulse < ActiveRecord::Base
 
 	def self.daily(current_node, start_period = nil, end_period = nil)
 		_extract(current_node, 
-			"extract(hour from timezone('#{tz}', pulse_time))",
-			"(0.0 + count(pulse_time)) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(hour from timezone('#{tz}', pulse_time)) as time_period",
-			"extract(hour from timezone('#{tz}', pulse_time))",
+			"extract(hour from timezone('#{tz}', pulse_time))::integer",
+			"count(pulse_time) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(hour from timezone('#{tz}', pulse_time))::integer as time_period",
+			"extract(hour from timezone('#{tz}', pulse_time))::integer",
 			start_period, end_period
 			)
 =begin
@@ -194,9 +200,9 @@ class Pulse < ActiveRecord::Base
 
 	def self.monthly(current_node, start_period = nil, end_period = nil)
 		_extract(current_node, 
-			"extract(day from timezone('#{tz}', pulse_time))",
-			"(0.0 + count(pulse_time)) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(day from timezone('#{tz}', pulse_time)) as time_period",
-			"extract(day from timezone('#{tz}', pulse_time))",
+			"extract(day from timezone('#{tz}', pulse_time))::integer",
+			"count(pulse_time)/1000.0 / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(day from timezone('#{tz}', pulse_time))::integer as time_period",
+			"extract(day from timezone('#{tz}', pulse_time))::integer",
 			start_period, end_period
 			)
 =begin
@@ -227,9 +233,9 @@ class Pulse < ActiveRecord::Base
 
 	def self.yearly(current_node, start_period = nil, end_period = nil)
 		_extract(current_node, 
-			"extract(month from timezone('#{tz}', pulse_time))",
-			"(0.0 + count(pulse_time)) / count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
-			"extract(month from timezone('#{tz}', pulse_time))",
+			"extract(month from timezone('#{tz}', pulse_time))::integer",
+			"count(pulse_time)/1000.0 / count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
+			"extract(month from timezone('#{tz}', pulse_time))::integer",
 			start_period, end_period
 			)
 =begin
@@ -257,6 +263,26 @@ class Pulse < ActiveRecord::Base
 			{ node: current_node, start_p: start_period, end_p: end_period }
 			]).map { |r| [ r.month_name, r.power ] }
 =end
+	end
+
+
+	def self.daily_per_month(current_node, start_period = nil, end_period = nil)
+		_extract(current_node, 
+			"extract(month from timezone('#{tz}', pulse_time))::integer",
+			"count(pulse_time)/1000.0 / count(distinct(extract(day from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
+			"extract(month from timezone('#{tz}', pulse_time))::integer",
+			start_period, end_period
+			)
+	end
+
+	def self.daily_slot_per_month(current_node, slot_clause, start_period = nil, end_period = nil)
+		_extract(current_node, 
+			"extract(month from timezone('#{tz}', pulse_time))::integer",
+			"count(pulse_time)/1000.0 / count(distinct(extract(day from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
+			"extract(month from timezone('#{tz}', pulse_time))::integer",
+			start_period, end_period,
+			slot_clause
+			)
 	end
 
 	def self.import_xx(node_id, file, truncate = true)

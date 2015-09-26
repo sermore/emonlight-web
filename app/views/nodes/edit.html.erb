@@ -14,7 +14,7 @@
 	<div class="panel-body">
 		<%= f.input :title %>
 		<%= f.input :time_zone %>
-		<%= f.input :dashboard, collection: ['real_time', 'daily', 'weekly', 'monthly', 'yearly', 'time_series'].collect { |v| [ v.humanize, v ] }, as: :check_boxes %>
+		<%= f.input :dashboard, collection: ['real_time', 'daily', 'weekly', 'monthly', 'daily_per_month', 'yearly', 'time_series'].collect { |v| [ v.humanize, v ] }, as: :check_boxes %>
 		<%= f.input :authentication_token, readonly: true %>
 		<%= f.input :import, as: :file, input_html: { onchange: "validateFiles(this)", :data => { :max_file_size => 5.megabytes } } %>
 	</div>

@@ -1,5 +1,10 @@
 # Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
+fixed20:
+  title: fixed20
+  user: test2
+  authentication_token: fixed20
+
 fixed60:
   title: fixed60
   user: test2

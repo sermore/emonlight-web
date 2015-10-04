@@ -56,3 +56,18 @@ pulse_monthly_<%= n += 1 %>:
 <% 
   t += (3600.0/pwh)/86400.0
 end %>
+
+<%
+t = DateTime.parse('2014-12-01')
+n = 0
+pwh = 20.0
+while t.year == 2014 || t.year <= 2015 && t.month < 3 do
+%>
+pulse_fixed20_<%= n += 1 %>:
+  node: fixed20
+  pulse_time: <%=t%>
+  power: <%=pwh%>
+<% 
+  t += (3600.0/pwh)/86400.0
+  # puts t
+end %>

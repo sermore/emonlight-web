@@ -22,8 +22,8 @@ class StatsController < ApplicationController
 	def yearly_data
 		opts = { force: params[:force] == "true", expires_in: 1.hours }
 		q = Rails.cache.fetch("#{current_node.cache_key}/yearly_data", opts) do
-			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
-			t0 = t1 << 12
+			t1 = params[:d].nil? ? (Time.zone.today.in_time_zone + 1.day) : Time.zone.parse(params[:d])
+			t0 = t1 - 12.month
 
 			columns = [ {id: 'month', label: 'Month', type: 'string'}, 
 				{id: 'power_overall', label: 'Overall', type: 'number'},
@@ -58,8 +58,8 @@ class StatsController < ApplicationController
 	def monthly_data
 		opts = { force: params[:force] == "true", expires_in: 1.hours }
 		q = Rails.cache.fetch("#{current_node.cache_key}/monthly_data", opts) do
-			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
-			t0 = t1 << 1
+			t1 = params[:d].nil? ? Time.zone.today.in_time_zone + 1.day : Time.zone.parse(params[:d])
+			t0 = t1 - 1.month
 
 			columns = [ {id: 'day_month', label: 'Day', type: 'string'}, 
 				{id: 'power_overall', label: 'Overall', type: 'number'},
@@ -92,8 +92,8 @@ class StatsController < ApplicationController
 	def weekly_data
 		opts = { force: params[:force] == "true", expires_in: 1.hours }
 		q = Rails.cache.fetch("#{current_node.cache_key}/weekly_data", opts) do
-			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
-			t0 = t1 - 7
+			t1 = params[:d].nil? ? Time.zone.today.in_time_zone + 1.day : Time.zone.parse(params[:d])
+			t0 = t1 - 7.day
 
 			columns = [ {id: 'day_week', label: 'Day of the Week', type: 'string'}, 
 				{id: 'power_overall', label: 'Overall', type: 'number'},
@@ -173,41 +173,42 @@ class StatsController < ApplicationController
 	def daily_per_month_data
 		opts = { force: params[:force] == "true", expires_in: 1.hours }
 		q = Rails.cache.fetch("#{current_node.cache_key}/daily_per_monthly_data", opts) do
-			t1 = params[:d].nil? ? Time.zone.today + 1 : Time.zone.parse(params[:d])
-			t0 = t1 << 12
+			t1 = params[:d].nil? ? Time.zone.today.in_time_zone + 1.day : Time.zone.parse(params[:d])
+			t0 = t1 - 12.month
 
 			columns = [ {id: 'month', label: 'Month', type: 'string'}, 
 				{id: 'f1', label: 'F1', type: 'number'},
 				{id: 'f2', label: 'F2', type: 'number'},
-				{id: 'sum', label: 'Total', type: 'number'},
+				{id: 'sum', label: 'Total', type: 'number', role: 'annotation'},
 				{id: 'mean_f1', label: 'F1 Mean', type: 'number'},
 				{id: 'mean_f2', label: 'F2 Mean', type: 'number'},
 				{id: 'mean_total', label: 'Total Mean', type: 'number'},
 			]
 
 			tz = Time.zone.now.formatted_offset
-			q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) between 8 and 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
-			q_f2 = "(extract(hour from timezone('#{tz}', pulse_time)) between 19 and 24 or extract(hour from timezone('#{tz}', pulse_time)) between 0 and 8) and ((extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5) or (extract(dow from timezone('#{tz}', pulse_time)) not between 1 and 5) or (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
+			q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) >= 8 and extract(hour from timezone('#{tz}', pulse_time)) < 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
+			q_f2 = "not (#{q_f1})"
 			mean = Pulse.daily_mean(current_node)/1000.0
-			mean_f1 = Pulse.daily_slot_per_month_mean(current_node, q_f1, t0, t1)/1000.0
-			mean_f2 = Pulse.daily_slot_per_month_mean(current_node, q_f2, t0, t1)/1000.0
+			mean_f1 = Pulse.daily_mean(current_node, t0, t1, q_f1)/1000.0
+			mean_f2 = Pulse.daily_mean(current_node, t0, t1, q_f2)/1000.0
 			f1 = Pulse.daily_slot_per_month(current_node, q_f1, t0, t1)
 			f2 = Pulse.daily_slot_per_month(current_node, q_f2, t0, t1)
+			# pp "MEAN=", mean, mean_f1, mean_f2
 
-			d = Time.zone.today << 11
+			d = Time.zone.today.in_time_zone - 11.month
 			data = Array.new(7) { Array.new(12, 0) }
 			(0 .. 11).each do |i|
 				m = d.month
 				data[0][i] = Date::MONTHNAMES[m]
-				v = f1.bsearch {|x| x[0] >= m }
-				data[1][i] = v[1] if v && v[0] == m
-				v = f2.bsearch {|x| x[0] >= m }
-				data[2][i] = v[1] if v && v[0] == m
+				v = f1.bsearch {|x| x.year >= d.year && x.month >= d.month }
+				data[1][i] = v.power if v && v.year == d.year && v.month == d.month
+				v = f2.bsearch {|x| x.year >= d.year && x.month >= d.month }
+				data[2][i] = v.power if v && v.year == d.year && v.month == d.month
 				data[3][i] = data[1][i] + data[2][i]
 				data[4][i] = mean_f1
 				data[5][i] = mean_f2
 				data[6][i] = mean
-				d >>= 1
+				d += 1.month
 			end
 			data = data.transpose
 			data.slice!(0) while data[0][1] == 0 && data[0][2] == 0

@@ -37,82 +37,57 @@ class Pulse < ActiveRecord::Base
 		end
 	end
 
-	def self._mean(current_node, group_clause, start_period = nil, end_period = nil, where_clause = nil)
-		subq = Pulse.where(node: current_node)
-			.where(where_clause)
-			.group(group_clause)
-			.select('count(*) as power')
-		subq = subq.where('pulse_time >= :start_p and pulse_time < :end_p', { start_p: start_period, end_p: end_period }) if start_period != nil && end_period != nil
-		from(subq, :pulses).average(:power)
-
-		# find_by_sql([
-		# 	"SELECT AVG(daily_power) AS power FROM (" +
-		# 	"	SELECT COUNT(pulse_time) AS daily_power " +
-		# 	"	FROM pulses r " +
-		# 	"	WHERE node_id = :node " +
-		# 	(start_period != nil || end_period != nil ? "AND r.pulse_time BETWEEN :start_p AND :end_p " : "") +
-		# 	"	GROUP BY trunc(extract(epoch from pulse_time) / 86400.0) " +
-		# 	"	) AS power_daily",
-		# 	{ node: current_node, start_p: start_period, end_p: end_period }
-		# 	]).first.power
+	def self.to_date(date, default)
+		case date
+		when nil
+			default
+		when ActiveSupport::TimeWithZone
+			date
+		when Time
+			date.in_time_zone
+		when String
+			Time.zone.parse(date)
+		when Numeric
+			Time.zone.at(date)
+		# when Date, DateTime
+		# 	date.in_time_zone
+		else
+			raise "unable to convert #{date}:#{date.class} to date"
+		end
 	end
 
-	def self.daily_mean(current_node, start_period = nil, end_period = nil)
-		_mean(current_node, "trunc(extract(epoch from timezone('#{tz}', pulse_time)) / 86400.0)", start_period, end_period)
+	def self.set_period(current_node, start_period = nil, end_period = nil)
+		s0, s1 = current_node.pulses.order(:pulse_time).first.pulse_time, current_node.pulses.order(:pulse_time).last.pulse_time
+		t0, t1 = to_date(start_period, s0), to_date(end_period, s1)
+		[t0 < s0 ? s0 : t0, t1 > s1 ? s1 : t1]
 	end
 
+	def self._mean(current_node, period, start_period = nil, end_period = nil, where_clause = nil)
+		t0, t1 = set_period(current_node, start_period, end_period)
+		dt = t1 - t0
+		dt = period < dt ? dt / period : 1
+		# pp t0, t1, dt
+		Pulse.where(node: current_node)
+		.where('pulse_time >= :start_p and pulse_time < :end_p', { start_p: t0, end_p: t1 })
+		.where(where_clause)
+		.count()/dt
+	end
+
+	def self.daily_mean(current_node, start_period = nil, end_period = nil, where_clause = nil)
+		_mean(current_node, 86400.0, start_period, end_period, where_clause)
+	end
 
 	def self.hourly_mean(current_node, start_period = nil, end_period = nil)
-		_mean(current_node, "trunc(extract(epoch from timezone('#{tz}', pulse_time)) / 3600.0)", start_period, end_period)
-=begin
-		find_by_sql([
-			"SELECT AVG(hourly_power) AS power FROM (" +
-			"	SELECT COUNT(pulse_time) AS hourly_power " +
-			"	FROM pulses r " +
-			"	WHERE node_id = :node " +
-			(start_period != nil || end_period != nil ? "AND r.pulse_time BETWEEN :start_p AND :end_p " : "") +
-			"	GROUP BY trunc(extract(epoch from pulse_time) / 3600) " +
-			"	) AS power_hourly",
-			{ node: current_node, start_p: start_period, end_p: end_period }
-			]).first.power
-=end
+		_mean(current_node, 3600.0, start_period, end_period)
 	end
 
 	def self.monthly_mean(current_node, start_period = nil, end_period = nil)
-		_mean(current_node, "extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time))", start_period, end_period)
-=begin
-		find_by_sql([
-			"SELECT AVG(monthly_power) AS power FROM (" +
-			"	SELECT COUNT(pulse_time) AS monthly_power " +
-			"	FROM pulses r " +
-			"	WHERE node_id = :node " +
-			(start_period != nil || end_period != nil ? "AND r.pulse_time BETWEEN :start_p AND :end_p " : "") +
-			"	GROUP BY extract(year from pulse_time) * 12 + extract(month from pulse_time) " +
-			"	) AS power_monthly",
-			{ node: current_node, start_p: start_period, end_p: end_period }
-			]).first.power
-=end
+		_mean(current_node, 2592000.0, start_period, end_period)
 	end
 
 	def self.yearly_mean(current_node, start_period = nil, end_period = nil)
-		_mean(current_node, "extract(year from timezone('#{tz}', pulse_time))", start_period, end_period)		
-=begin
-		find_by_sql([
-			"SELECT AVG(monthly_power) AS power FROM (" +
-			"	SELECT COUNT(pulse_time) AS monthly_power " +
-			"	FROM pulses r " +
-			"	WHERE node_id = :node " +
-			(start_period != nil || end_period != nil ? "AND r.pulse_time BETWEEN :start_p AND :end_p " : "") +
-			"	GROUP BY extract(year from pulse_time) * 12 + extract(month from pulse_time) " +
-			"	) AS power_monthly",
-			{ node: current_node, start_p: start_period, end_p: end_period }
-			]).first.power
-=end
+		_mean(current_node, 31536000.0, start_period, end_period)
 	end
-
-	def self.daily_slot_per_month_mean(current_node, slot_clause, start_period = nil, end_period = nil)
-		_mean(current_node, "trunc(extract(epoch from timezone('#{tz}', pulse_time)) / 86400.0)", start_period, end_period, slot_clause)
-	end		
 
 	def self._extract(current_node, group_clause, select_clause, order_clause, start_period = nil, end_period = nil, where_clause = nil)
 		subq = Pulse.where(node: current_node)
@@ -126,9 +101,9 @@ class Pulse < ActiveRecord::Base
 
 	def self.weekly(current_node, start_period = nil, end_period = nil)
 		_extract(current_node, 
-			"extract(dow from timezone('#{tz}', pulse_time))",
-			"count(pulse_time)/1000.0 / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(dow from timezone('#{tz}', pulse_time)) as time_period",
-			"extract(dow from timezone('#{tz}', pulse_time))",
+			"extract(dow from timezone('#{tz}', pulse_time))::integer",
+			"count(pulse_time)/1000.0 / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(dow from timezone('#{tz}', pulse_time))::integer as time_period",
+			"extract(dow from timezone('#{tz}', pulse_time))::integer",
 			start_period, end_period
 			)
 =begin
@@ -276,13 +251,22 @@ class Pulse < ActiveRecord::Base
 	end
 
 	def self.daily_slot_per_month(current_node, slot_clause, start_period = nil, end_period = nil)
-		_extract(current_node, 
-			"extract(month from timezone('#{tz}', pulse_time))::integer",
-			"count(pulse_time)/1000.0 / count(distinct(extract(day from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
-			"extract(month from timezone('#{tz}', pulse_time))::integer",
-			start_period, end_period,
-			slot_clause
-			)
+		t0, t1 = set_period(current_node, start_period, end_period)
+		days = (t1 - t0)/86400.0
+		t11 = t1 - 86400
+		q = Pulse.where(node: current_node)
+			.where(slot_clause)
+			.group("extract(year from timezone('#{tz}', pulse_time))::integer, extract(month from timezone('#{tz}', pulse_time))::integer")
+			.order("extract(year from timezone('#{tz}', pulse_time))::integer, extract(month from timezone('#{tz}', pulse_time))::integer")
+			.where('pulse_time >= :start_p and pulse_time < :end_p', { start_p: t0, end_p: t1 })
+			.select("count(pulse_time)/1000.0 as power, extract(month from timezone('#{tz}', pulse_time))::integer as month, extract(year from timezone('#{tz}', pulse_time))::integer as year")
+			# .pluck(:month, :year, :power)
+		q.each do |r|
+			s0 = t0.month == r.month && t0.year == r.year ? t0.day : 1
+			s1 = t11.month == r.month && t11.year == r.year ? t11.day : Time.zone.local(r.year, r.month, 1).end_of_month.day
+			r.power = r.power / (s1 - s0 + 1)
+		end
+		# pp q
 	end
 
 	def self.import_xx(node_id, file, truncate = true)

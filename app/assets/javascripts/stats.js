@@ -121,7 +121,7 @@ function drawDailyChart(remote_url, elementId, offset) {
     return;
 
   var options = {
-    title : 'Daily Power Usage (kW/hour)',
+    title : 'Daily Power Usage (W/hour)',
     legend: { position: 'bottom' },
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},
@@ -191,7 +191,7 @@ function drawDailyPerMonthChart(remoteUrl, elementId, offset) {
     // hAxis: {title: 'Time', textPosition: 'out'},
     isStacked: true,
     seriesType: 'bars',
-    series: {2: {type: 'line'}, 3: {type: 'line'}, 4: {type: 'line'}, 5: {type: 'line'}}
+    series: {2: {type: 'line'}, 3: {type: 'line'}, 4: {type: 'line'}}
     // ,chartArea: { width: '90%', height: '60%' }
     //,height: 400
   };

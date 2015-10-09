@@ -25,6 +25,7 @@ Rails.application.routes.draw do
   # get 'stats/:node_id/daily' => 'stats#chart', as: :daily_stats
   get 'stats/:node_id/daily_data' => 'stats#daily_data', as: :daily_data_stats
   get 'stats/:node_id/daily_per_month_data' => 'stats#daily_per_month_data', as: :daily_per_month_data_stats
+  get 'stats/:node_id/slot_percentage_data' => 'stats#slot_percentage_data', as: :slot_percentage_data_stats
   # get 'stats/:node_id/real_time' => 'stats#chart', as: :real_time_stats
   get 'stats/:node_id/real_time_data' => 'stats#real_time_data', as: :real_time_data_stats
   get 'stats/:node_id/:chart' => 'stats#chart', as: :chart_stats, constraints: { chart: /yearly|monthly|weekly|daily|real_time|time_series|daily_per_month/ }

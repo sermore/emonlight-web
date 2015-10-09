@@ -22,6 +22,8 @@
     drawYearlyChart("<%=yearly_data_stats_path(current_node)%>", 'chart_yearly_div', <%= offset %>);
   if ($("#chart_time_series_div").length)
       TS.init("chart_time_series_div", "slider_div", "<%=time_series_data_stats_path(current_node, format: :json)%>", "<%=time_interval_stats_path(current_node, format: :json)%>", <%= offset %>);
-  if ($("#chart_daily_per_month_div").length)
+  if ($("#chart_daily_per_month_div").length) {
     drawDailyPerMonthChart("<%=daily_per_month_data_stats_path(current_node)%>", 'chart_daily_per_month_div', <%= offset %>);
+    drawSlotPercentageChart("<%=slot_percentage_data_stats_path(current_node)%>", 'chart_slot_percentage_div', <%= offset %>);
+  }
 </script>

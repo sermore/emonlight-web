@@ -185,7 +185,7 @@ function drawDailyPerMonthChart(remoteUrl, elementId, offset) {
     return;
 
   var options = {
-    title : 'Daily Power Usage (kW/day)',
+    title : 'Daily Mean Power Usage (kW/day)',
     legend: { position: 'bottom' },
     // vAxis: {title: 'Power'},
     // hAxis: {title: 'Time', textPosition: 'out'},
@@ -196,6 +196,18 @@ function drawDailyPerMonthChart(remoteUrl, elementId, offset) {
     //,height: 400
   };
   var chart = new google.visualization.ComboChart(document.getElementById(elementId));
+  getData(remoteUrl, chart, options, { force: window.forceRefresh == true }, offset);
+}
+
+function drawSlotPercentageChart(remoteUrl, elementId, offset) {
+  if ($("#" + elementId).length == 0)
+    return;
+
+  var options = {
+    title : 'Power Usage per Time Slot (%)',
+    legend: { position: 'bottom' }
+  };
+  var chart = new google.visualization.PieChart(document.getElementById(elementId));
   getData(remoteUrl, chart, options, { force: window.forceRefresh == true }, offset);
 }
 

@@ -3,10 +3,6 @@ require 'csv'
 class Pulse < ActiveRecord::Base
 	belongs_to :node
 
-	def self.tz
-		Time.zone.now.formatted_offset
-	end
-
 	def self.raw(current_node, start_period, end_period, len = 100, limit = nil, offset = nil)
 		#p = (Time.zone.parse(end_period) - Time.zone.parse(start_period)) / len
 #		begin
@@ -35,31 +31,6 @@ class Pulse < ActiveRecord::Base
 			.pluck("timezone('#{tz}', pulse_time) as pulse_time", :power)
 			# .map { |r| [ r.pulse_time, r.power ] }
 		end
-	end
-
-	def self.to_date(date, default)
-		case date
-		when nil
-			default
-		when ActiveSupport::TimeWithZone
-			date
-		when Time
-			date.in_time_zone
-		when String
-			Time.zone.parse(date)
-		when Numeric
-			Time.zone.at(date)
-		# when Date, DateTime
-		# 	date.in_time_zone
-		else
-			raise "unable to convert #{date}:#{date.class} to date"
-		end
-	end
-
-	def self.set_period(current_node, start_period = nil, end_period = nil)
-		s0, s1 = current_node.pulses.order(:pulse_time).first.pulse_time, current_node.pulses.order(:pulse_time).last.pulse_time
-		t0, t1 = to_date(start_period, s0), to_date(end_period, s1)
-		[t0 < s0 ? s0 : t0, t1 > s1 ? s1 : t1]
 	end
 
 	def self._mean(current_node, period, start_period = nil, end_period = nil, where_clause = nil)
@@ -295,6 +266,36 @@ class Pulse < ActiveRecord::Base
 		Pulse.read(current_node, file, :read_csv, :read_row_sec_msec)
 	end
 
+private
+
+	def self.tz
+		Time.zone.now.formatted_offset
+	end
+
+	def self.to_date(date, default)
+		case date
+		when nil
+			default
+		when ActiveSupport::TimeWithZone
+			date
+		when Time
+			date.in_time_zone
+		when String
+			Time.zone.parse(date)
+		when Numeric
+			Time.zone.at(date)
+		# when Date, DateTime
+		# 	date.in_time_zone
+		else
+			raise "unable to convert #{date}:#{date.class} to date"
+		end
+	end
+
+	def self.set_period(current_node, start_period = nil, end_period = nil)
+		s0, s1 = current_node.pulses.order(:pulse_time).first.pulse_time, current_node.pulses.order(:pulse_time).last.pulse_time
+		t0, t1 = to_date(start_period, s0), to_date(end_period, s1)
+		[t0 < s0 ? s0 : t0, t1 > s1 ? s1 : t1]
+	end
 
 	def self.calc_power(pulses_per_kwh, dt)
 		return (3600000.0 / dt) / pulses_per_kwh

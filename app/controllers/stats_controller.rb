@@ -182,7 +182,7 @@ class StatsController < ApplicationController
 				{id: 'sum', label: 'Total', type: 'number', role: 'annotation'},
 				{id: 'mean_f1', label: 'F1 Mean', type: 'number'},
 				{id: 'mean_f2', label: 'F2 Mean', type: 'number'},
-				{id: 'mean_total', label: 'Total Mean', type: 'number'},
+				{id: 'mean_total', label: 'Total Mean', type: 'number'}
 			]
 
 			tz = Time.zone.now.formatted_offset
@@ -212,6 +212,30 @@ class StatsController < ApplicationController
 			end
 			data = data.transpose
 			data.slice!(0) while data[0][1] == 0 && data[0][2] == 0
+			{ last_update: Time.zone.now, data: to_data_table(columns, data) }
+		end
+  	render json: q
+	end
+
+	def slot_percentage_data
+		opts = { force: params[:force] == "true", expires_in: 1.hours }
+		q = Rails.cache.fetch("#{current_node.cache_key}/slot_percentage_data", opts) do
+			t1 = params[:d].nil? ? Time.zone.today.in_time_zone + 1.day : Time.zone.parse(params[:d])
+			t0 = t1 - 12.month
+
+			columns = [ {id: 'slot_names', label: 'Slots', type: 'string'},
+				{id: 'slot', label: '%', type: 'number'},
+				{id: 'sum', label: 'Total', type: 'number', role: 'annotation'}
+			]
+
+			tz = Time.zone.now.formatted_offset
+			q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) >= 8 and extract(hour from timezone('#{tz}', pulse_time)) < 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
+			q_f2 = "not (#{q_f1})"
+			# mean = Pulse.daily_mean(current_node)/1000.0
+			mean_f1 = Pulse.daily_mean(current_node, t0, t1, q_f1)/1000.0
+			mean_f2 = Pulse.daily_mean(current_node, t0, t1, q_f2)/1000.0
+			# pp "MEAN=", mean, mean_f1, mean_f2
+			data = [ ["F1", mean_f1, mean_f1 + mean_f2], ["F2", mean_f2, mean_f1 + mean_f2] ]
 			{ last_update: Time.zone.now, data: to_data_table(columns, data) }
 		end
   	render json: q

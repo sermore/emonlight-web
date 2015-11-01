@@ -37,6 +37,8 @@ class NodesController < ApplicationController
 			rows_imported = import
 			redirect_to nodes_url, notice: "Node '#{@node.title}' successfully created" + (rows_imported.nil? ? "" : " and imported #{rows_imported} rows") + "."
 			@nodes = nil
+		else
+			render 'edit'
 		end
 	end
 	
@@ -59,15 +61,14 @@ class NodesController < ApplicationController
 		# read node from authenticate_from_token
 		Time.zone = @current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil? || @current_node.time_zone.empty?
 		data = read_data
-		res = Pulse.read(@current_node, data, :read_simple, :read_row_simple) unless data.nil? || data.empty?
+		res = Pulse.read(@current_node, data, false, :read_simple, :read_row_simple) unless data.nil? || data.empty?
 		render res.nil? || res == 0 ? { plain: "FAIL", status: 400 } : { plain: "OK" }
 	end
 
-	private
-
 	def import
-		import = params[:node][:import]
-		rows_imported = Pulse.import(@node.id, import.path) unless import.nil?
+		pn = Node.new(node_params)
+		clear_on_input = ("1" == pn.clear_on_import ? true : false)
+		rows_imported = Pulse.import(@node.id, pn.import.path, clear_on_input) unless pn.import.nil?
 	end
 
 	# def import
@@ -78,6 +79,13 @@ class NodesController < ApplicationController
 	# 		redirect_to node_path, notice: "Import completed."
 	# 	end
 	# end
+
+	def export
+		id = params[:id]
+		send_data Pulse.export(id), filename: "export_#{id}.csv"
+	end
+
+	private
 
 	def read_data
 		pwr = params[:power].presence
@@ -100,7 +108,7 @@ class NodesController < ApplicationController
 	end		
 
 	def node_params
-		params.require(:node).permit(:title, :time_zone, dashboard: [])
+		params.require(:node).permit(:title, :pulses_per_kwh, :time_zone, :clear_on_import, :import, dashboard: [])
 	end
 
 	def authenticate_user_from_token!

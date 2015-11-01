@@ -261,10 +261,19 @@ class Pulse < ActiveRecord::Base
 		end
 	end
 
-	def self.import(node_id, file)
+	def self.import(node_id, file, clear_on_import)
 		current_node = Node.find(node_id)
-		Pulse.read(current_node, file, :read_csv, :read_row_sec_msec)
+		Pulse.read(current_node, file, clear_on_import, :read_csv, :read_row_csv)
 	end
+
+  def self.export(current_node)
+    CSV.generate do |csv|
+      # csv << [:pulse_time, :power]
+      where(node: current_node).order(:pulse_time).each do |row|
+        csv << [ row.pulse_time.iso8601(6), row.power ]
+      end
+    end
+  end
 
 private
 
@@ -330,6 +339,10 @@ private
 		(row.is_a? Array) ? row : [row, nil]
 	end
 
+	def self.read_row_csv(row)
+		[ Time.zone.parse(row[0]), row[1].to_d ]
+	end
+
 	def self.read_row_sec_msec(row)
 		#time_number = row[0].to_f + row[1].to_f / 1.0e9
 		#time = Time.zone.at(row[0].to_i, row[1].to_i)
@@ -341,7 +354,7 @@ private
 		CSV.foreach(data, :headers => false) { |row| block.call(row) }
 	end
 
-	def self.read(current_node, data, read_func, read_row_func, interval = [])
+	def self.read(current_node, data, clear_on_import, read_func, read_row_func, interval = [])
 		# verify that no values are already present in interval being inserted
 		if !interval.nil? && !interval.empty? && interval.length == 2 && Pulse.where("node_id = :node and pulse_time between :t1 and :t2", { node: current_node, t1: interval[0], t2: interval[1] }).count() > 0
 			return 0
@@ -349,12 +362,13 @@ private
 		i = 0
 		ActiveRecord::Base.transaction do
 			last_time = nil
+			Pulse.where(node: current_node).delete_all if clear_on_import == true
 			Pulse.send(read_func, data) { |r|
 				begin
 					time_in, power_in = Pulse.send(read_row_func, r)
 					last_time, time, power = read_power(current_node, time_in, last_time)
 					if !time.nil?
-	 	 					q = Pulse.create!(node: current_node, :pulse_time => time, :power => power)
+	 	 					q = Pulse.create!(node: current_node, :pulse_time => time, :power => (power == 0 && power_in > 0 ? power_in : power))
 						if !power_in.nil? && (power_in - power).abs > 1e-4
 	 	 					logger.warn "power mismatch at #{time}: expected #{power_in}, calculated #{power}"
 	 	 				end

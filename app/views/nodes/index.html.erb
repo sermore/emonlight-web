@@ -6,26 +6,33 @@
 
 	<div class="panel-body">
 
-	<table class="table">
+	<table class="table table-bordered">
 		<thead>
 			<tr>
 				<th>Node title</th>
+				<th style="width: 10%">Pulse count</th>
+				<th style="width: 20%">Last pulse</th>
+				<th style="width: 20%">Time Zone</th>
 				<th class="right">Actions</th>
 			</tr>
 		</thead>
 		<tbody>
 <% for n in @nodes %>
+	<% Time.zone = n.time_zone unless n.nil? || n.time_zone.nil? || n.time_zone.empty? %>
 		<tr>
 			<td><%= link_to n.title, dashboard_stats_path(n) %></td>
+			<td style="text-align:right; width: 10%"><%= number_with_delimiter(n.pulse_count) %></td>
+			<td><%= (d = n.pulse_last).nil? ? "" : time_tag(d) %></td>
+			<td><%= d.nil? ? "" : Time.zone.name %></td>
 			<td class="right">
-				<%= link_to dashboard_stats_path(n), class: "btn btn-default" do %>
-  				<span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span>
+				<%= link_to dashboard_stats_path(n), class: "btn btn-sm" do %>
+  				<span class="glyphicon glyphicon-dashboard" aria-hidden="true" aria-label="Dashboard"></span>
   			<% end %>
-				<%= link_to(edit_node_path(n), class: "btn btn-default") do %>
-  				<span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+				<%= link_to(edit_node_path(n), class: "btn btn-sm") do %>
+  				<span class="glyphicon glyphicon-edit" aria-hidden="true" aria-label="Edit"></span>
   			<% end %>
-				<%= link_to(node_path(n), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-default") do %>
-  				<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+				<%= link_to(node_path(n), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-sm") do %>
+  				<span class="glyphicon glyphicon-trash" aria-hidden="true" aria-label="Delete"></span>
   			<% end %>
   		</td>
   	</tr>  	
@@ -33,9 +40,9 @@
 		</tbody>
 		<tfoot>
 			<tr>
-				<th></th>
-				<th><%= link_to(new_node_path, {class: "btn btn-default"}) do %>
-					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+				<th colspan="4"></th>
+				<th><%= link_to(new_node_path, {class: "btn btn-sm"}) do %>
+					<span class="glyphicon glyphicon-plus" aria-hidden="true" aria-label="Add node"></span>
 					<% end %>
 				</th>
 			</tr>

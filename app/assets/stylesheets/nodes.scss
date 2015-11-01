@@ -3,7 +3,8 @@
 // You can use Sass (SCSS) here: http://sass-lang.com/
 
 .table > thead > tr > th, .table > thead > tr > td, .table > tbody > tr > th, .table > tbody > tr > td, .table > tfoot > tr > th, .table > tfoot > tr > td {
-		white-space: normal;	
+		white-space: normal;
+		vertical-align: middle;
 	&.right {
 		width: 1%;
 		white-space: nowrap;

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   resources :nodes do
   	member do
   		post 'import'
+      post 'export'
   	end
     collection do
       post 'read' 

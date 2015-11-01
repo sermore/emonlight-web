@@ -1,8 +1,10 @@
 class Node < ActiveRecord::Base
   belongs_to :user
   has_many :pulses, dependent: :delete_all
+  attr_accessor :clear_on_import, :import
 	before_save :ensure_authentication_token, :init_token, :clean_dashboard
-  validates :title, presence: true
+  validates :pulses_per_kwh, numericality: { only_integer: true, greater_than: 0 }
+  validates :title, :pulses_per_kwh, :time_zone,  presence: true
   serialize :dashboard, Array
   after_initialize { dashboard = ['real_time', 'daily', 'weekly', 'monthly', 'yearly'] }
 

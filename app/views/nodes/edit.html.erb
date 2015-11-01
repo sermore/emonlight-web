@@ -2,21 +2,24 @@
 	<h2><%= @node.new_record? ? "New" : "Edit" %> Node</h2>
 </div>
 
+<% Time.zone = current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil? || @current_node.time_zone.empty? %>
 
 <%= simple_form_for @node, multipart: true do |f| %>
 
 <div class="panel panel-default">
 
 	<div class="panel-heading">
-		<h3 class="panel-title">Node content</h3>
+		<h3 class="panel-title">Settings</h3>
 	</div>
 
 	<div class="panel-body">
 		<%= f.input :title %>
+		<%= f.input :pulses_per_kwh, as: :integer, label: "Pulses per kWh" %>
 		<%= f.input :time_zone %>
 		<%= f.input :dashboard, collection: ['real_time', 'daily', 'weekly', 'monthly', 'daily_per_month', 'yearly', 'time_series'].collect { |v| [ v.humanize, v ] }, as: :check_boxes %>
 		<%= f.input :authentication_token, readonly: true %>
 		<%= f.input :import, as: :file, input_html: { onchange: "validateFiles(this)", :data => { :max_file_size => 5.megabytes } } %>
+		<%= f.input :clear_on_import, as: :boolean, label: "Remove all data before import WARNING: all existing data will be lost" unless @node.new_record? %>
 	</div>
 
   <div class="panel-footer">
@@ -25,6 +28,10 @@
   </div>
 
 </div>
+
+<% end %>
+
+<% if !@node.new_record? %>
 
 <div class="panel panel-default">
 	<div class="panel-heading">
@@ -39,17 +46,26 @@ api-key = "<%=@node.authentication_token%>"</pre>
 
 </div>
 
-
 <div class="panel panel-default">
 	<div class="panel-heading">
 		<h3 class="panel-title">Data</h3>
 	</div>
 
 	<div class="panel-body">
-		<%= f.input :pulse_count, readonly: true %>
-		<%= f.input :pulse_first, label: "Starting at", readonly: true %>
-		<%= f.input :pulse_last, label: "Ending at", readonly: true %>
+			<strong>Pulse count</strong>
+			<div class="well well-sm"><%= number_with_delimiter(@node.pulse_count) %></div>
+			<strong>Starting at</strong>
+			<div class="well well-sm"><%= (d = @node.pulse_first).nil? ? "" : time_tag(d.in_time_zone) %></div>
+			<strong>Ending at</strong>
+			<div class="well well-sm"><%= (d = @node.pulse_last).nil? ? "" : time_tag(d.in_time_zone) %></div>
 	</div>
+
+  <div class="panel-footer">
+		<%= link_to(export_node_path(@node), method: :post, class: "btn btn-default") do %>
+  				<span class="glyphicon glyphicon-export" aria-hidden="true"></span>
+  				Export
+  	<% end %>
+  </div>
 
 </div>
 

@@ -11,14 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150915173750) do
+ActiveRecord::Schema.define(version: 20151101104658) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "nodes", force: :cascade do |t|
-    t.string   "title"
-    t.integer  "pulses_per_kwh",       default: 1000
+    t.string   "title",                               null: false
+    t.integer  "pulses_per_kwh",       default: 1000, null: false
     t.string   "authentication_token"
     t.integer  "user_id"
     t.datetime "created_at",                          null: false

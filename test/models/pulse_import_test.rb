@@ -29,7 +29,7 @@ class PulseTestImport < ActiveSupport::TestCase
 		t = Time.parse('2014-07-08 14:45:34.234403')
 		row = [t.to_i, t.tv_nsec]
 		t1 = Pulse.read_row_sec_msec(row)
-		assert_equal([t.to_i, t.tv_nsec], [t1.to_i, t1.tv_nsec])
+		assert_equal([t.to_i, t.tv_nsec], [t1[0].to_i, t1[0].tv_nsec])
 	end	
 
 	test "read power" do
@@ -50,7 +50,7 @@ class PulseTestImport < ActiveSupport::TestCase
 		node = Node.find_by_title('fixed60')
 		time = Time.parse('2014-07-08 14:45:34.234403')
 		rows = [ time, time += 1.5, time += 4, time += 10 ]
-		c = Pulse.read node, rows, :read_simple, :read_row_simple
+		c = Pulse.read node, rows, false, :read_simple, :read_row_simple
 		assert_equal(4, c)
 	end
 
@@ -65,11 +65,11 @@ class PulseTestImport < ActiveSupport::TestCase
 		assert_equal(5, ts.length)
 		q = Pulse.where("pulse_time between :t1 and :t2", { t1: '2014-07-08 14:45:34', t2: '2014-07-08 14:46:34'})
 		assert(0, q.length)
-		assert_equal(5, Pulse.read(current_node, ts, :read_simple, :read_row_sec_msec))
+		assert_equal(5, Pulse.read(current_node, ts, false, :read_simple, :read_row_sec_msec))
 		q = Pulse.where("pulse_time between :t1 and :t2", { t1: '2014-07-08 14:45:34', t2: '2014-07-08 14:46:34'})
 		assert(5, q.length)
-		assert_equal(0, Pulse.read(current_node, ts, :read_simple, :read_row_sec_msec, [Pulse.read_row_sec_msec(ts[0]), Pulse.read_row_sec_msec(ts[-1])]))
-		assert_equal(0, Pulse.read(current_node, ts[1, 3], :read_simple, :read_row_sec_msec, [Pulse.read_row_sec_msec(ts[0]), Pulse.read_row_sec_msec(ts[-1])]))
+		assert_equal(0, Pulse.read(current_node, ts, false, :read_simple, :read_row_sec_msec, [Pulse.read_row_sec_msec(ts[0])[0], Pulse.read_row_sec_msec(ts[-1])[0]]))
+		assert_equal(0, Pulse.read(current_node, ts[1, 3], false, :read_simple, :read_row_sec_msec, [Pulse.read_row_sec_msec(ts[0])[0], Pulse.read_row_sec_msec(ts[-1])[0]]))
 	end
 
 end

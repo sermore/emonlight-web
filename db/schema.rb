@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20151101104658) do
+ActiveRecord::Schema.define(version: 20160207214543) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -37,6 +37,26 @@ ActiveRecord::Schema.define(version: 20151101104658) do
 
   add_index "pulses", ["node_id", "pulse_time"], name: "index_pulses_on_node_id_and_pulse_time", using: :btree
   add_index "pulses", ["node_id"], name: "index_pulses_on_node_id", using: :btree
+
+  create_table "stat_values", force: :cascade do |t|
+    t.integer "stat_id"
+    t.integer "group_by"
+    t.float   "mean",       default: 0.0, null: false
+    t.float   "sum_weight", default: 0.0, null: false
+  end
+
+  add_index "stat_values", ["stat_id"], name: "index_stat_values_on_stat_id", using: :btree
+
+  create_table "stats", force: :cascade do |t|
+    t.integer  "node_id"
+    t.integer  "stat"
+    t.float    "mean",                     default: 0.0, null: false
+    t.float    "sum_weight",               default: 0.0, null: false
+    t.datetime "start_time", precision: 6
+    t.datetime "end_time",   precision: 6
+  end
+
+  add_index "stats", ["node_id"], name: "index_stats_on_node_id", using: :btree
 
   create_table "users", force: :cascade do |t|
     t.string   "email",                  default: "", null: false
@@ -65,5 +85,7 @@ ActiveRecord::Schema.define(version: 20151101104658) do
 
   add_foreign_key "nodes", "users"
   add_foreign_key "pulses", "nodes"
+  add_foreign_key "stat_values", "stats"
+  add_foreign_key "stats", "nodes"
   add_foreign_key "users", "nodes"
 end

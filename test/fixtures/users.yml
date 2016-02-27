@@ -5,11 +5,16 @@
 # below each fixture, per the syntax in the comments below
 #
 test1:
+  name: test1
   email: test1@home.com
   #password: password1
   encrypted_password: <%= User.new.send(:password_digest, 'password1') %>
+# encrypted_password: $2a$10$PoBe1MvkoGJsjMVTEjKqgeBUp.xdfzWoiDjBzQhtLAj16NqIa2fOy
+  confirmed_at: <%= Time.now %>
 
 test2:
+  name: test2
   email: test2@home.com
   #password: password1
   encrypted_password: <%= User.new.send(:password_digest, 'password1') %>
+  confirmed_at: <%= Time.now %>

@@ -1,6 +1,8 @@
 class Node < ActiveRecord::Base
   belongs_to :user
   has_many :pulses, dependent: :delete_all
+  has_many :stats, dependent: :destroy
+
   attr_accessor :clear_on_import, :import
 	before_save :ensure_authentication_token, :init_token, :clean_dashboard
   validates :pulses_per_kwh, numericality: { only_integer: true, greater_than: 0 }

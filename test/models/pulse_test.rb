@@ -22,6 +22,11 @@ class PulseTest < ActiveSupport::TestCase
 		assert_equal([1560.0, 2], Pulse._raw_mean(Node.find_by_title(:wday), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-03')))
 		assert_equal([1120.0, 3], Pulse._raw_mean(Node.find_by_title(:wday), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-04')))
 		assert_equal([960.0, 4], Pulse._raw_mean(Node.find_by_title(:wday), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-05')))
+		assert_equal([0.0, 1], Pulse._raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-02'), Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal([164.75, 4.0], Pulse._raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-05'), Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal([1275.0, 4.0], Pulse._raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-05'), Pulse.WHERE_CLAUSE(:f2)))
+		assert_equal([332.3076923076923, 6.5], Pulse._raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-07 12:00'), Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal([1107.5384615384614, 6.5], Pulse._raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, Pulse.convert_date('2015-05-01'), Pulse.convert_date('2015-05-07 12:00'), Pulse.WHERE_CLAUSE(:f2)))
 	end
 
 	test "mean" do
@@ -34,6 +39,14 @@ class PulseTest < ActiveSupport::TestCase
 		# test for simple period 1/5 => 60, 2/5 => 70, 3/5 => 10, ...
 		assert_equal(1440.0, Pulse.mean(Node.find_by_title(:wday), StatService::DAILY, '2015-05-02'))
 		assert_equal(1560.0, Pulse.mean(Node.find_by_title(:wday), StatService::DAILY, '2015-05-03'))
+		# with where clause
+		assert_equal(0.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-03', nil, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(164.75, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-05', nil, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(1275.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-05', nil, Pulse.WHERE_CLAUSE(:f2)))
+		assert_equal(263.6, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-06', nil, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(1176.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-06', nil, Pulse.WHERE_CLAUSE(:f2)))
+		assert_equal(332.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', nil, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(1107.5384615384614, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', nil, Pulse.WHERE_CLAUSE(:f2)))
 	end
 
 	test "mean_on_period" do
@@ -53,6 +66,14 @@ class PulseTest < ActiveSupport::TestCase
 		assert_equal(1560.0, Pulse.mean(Node.find_by_title(:wday), StatService::DAILY, '2015-05-03', 5))
 		# test for simple period, discard previous calculation
 		assert_equal(720.0, Pulse.mean(Node.find_by_title(:wday), StatService::DAILY, '2015-05-08', 5))
+		# with where clause
+		assert_equal(0.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-03', 3, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(219.66666666666666, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-05', 3, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(1220.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-05', 3, Pulse.WHERE_CLAUSE(:f2)))
+		assert_equal(439.33333333333366, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-06', 3, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(1000.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-06', 3, Pulse.WHERE_CLAUSE(:f2)))
+		assert_equal(659.333333333334, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', 3, Pulse.WHERE_CLAUSE(:f1)))
+		assert_equal(780.0, Pulse.mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', 3, Pulse.WHERE_CLAUSE(:f2)))
 	end
 
 	test "hourly mean" do

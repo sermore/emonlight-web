@@ -23,16 +23,16 @@ module StatService
   def GROUPING(i)
   	case i
   	when 0
-  	"extract(hour from timezone('#{tz}', pulse_time))::integer"
-  when 1
-    "extract(dow from timezone('#{tz}', pulse_time))::integer"
-  when 2
-    "extract(day from timezone('#{tz}', pulse_time))::integer - 1"
-  when 3
-    "extract(month from timezone('#{tz}', pulse_time))::integer - 1"
-  when 4
-    "extract(month from timezone('#{tz}', pulse_time))::integer - 1"
-  end
+  		"extract(hour from timezone('#{tz}', pulse_time))::integer"
+  	when 1
+  		"extract(dow from timezone('#{tz}', pulse_time))::integer"
+  	when 2
+  		"extract(day from timezone('#{tz}', pulse_time))::integer - 1"
+  	when 3
+  		"extract(month from timezone('#{tz}', pulse_time))::integer - 1"
+  	when 4
+  		"extract(month from timezone('#{tz}', pulse_time))::integer - 1"
+  	end
   end
 
   TIME_GROUPING = [
@@ -50,6 +50,16 @@ module StatService
       ->(t) { (t - t.change(day: 1)).to_f / 2678400.0 }, # difference from first day of month
       ->(t) { (t - t.change(hour: 0)).to_f / 86400.0 } # difference from start of day
   ]
+
+  def WHERE_CLAUSE(q)
+  	q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) > 8 and extract(hour from timezone('#{tz}', pulse_time)) <= 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
+  	case q
+  	when :f1
+			q_f1
+		when :f2			
+			"not (#{q_f1})"
+		end
+	end
 
   def SELECT(i)
   	case i
@@ -70,15 +80,15 @@ module StatService
     Time.zone.now.formatted_offset
   end
 
-  def _raw_mean(current_node, stat, t0, t1)
+  def _raw_mean(current_node, stat, t0, t1, where_clause = nil)
     period = STAT_TIME[stat]
     # dt = t1 - t0
     # dt = period < dt ? 0.0 + dt / period : 1
     dt = 0.0 + (t1 - t0) / period
     # pp t0, t1, dt
-    v = Pulse.where(node: current_node)
-        .where('pulse_time >= ? and pulse_time <= ?', t0, t1)
-        .count()
+    q = Pulse.where(node: current_node).where('pulse_time >= ? and pulse_time <= ?', t0, t1)
+    q = q.where(where_clause) unless where_clause.nil?
+    v = q.count()
     return v > 0 ? (v-1.0)/dt : 0.0, dt
   end
 
@@ -88,11 +98,11 @@ module StatService
     Pulse.from(subq, :pulses).select(:sum_val, :sum_weight, :group_by)
   end
 
-  def mean(current_node, stat, end_period, period = nil)
+  def mean(current_node, stat, end_period, period = nil, where_clause = nil)
   	p0, p1 = verify_period(current_node, end_period, period)
     return 0.0 if p1.nil?
     # retrieve last calculated mean, throw exception if last date for calculated mean is greater than requested date
-    s = Stat.current_stat_mean(current_node, stat, period)
+    s = Stat.current_stat_mean(current_node, stat, period, where_clause)
     throw :mean_fails if !s.end_time.nil? && s.end_time > p1
    	s.end_time = p0 if s.end_time.nil?
    	# s.end_time to nil means no data is available, return 0
@@ -103,13 +113,13 @@ module StatService
     		s.sum_weight = 0.0
     		s.end_time = p0
     	elsif !s.start_time.nil? && s.start_time < p0
-    		m1, s1 = Pulse._raw_mean(current_node, stat, s.start_time, p0)
+    		m1, s1 = Pulse._raw_mean(current_node, stat, s.start_time, p0, where_clause)
     		s2 = s.sum_weight - s1
     		m2 = (s.mean * s.sum_weight - m1 * s1) / s2
     		s.mean = m2
     		s.sum_weight = s2
     	end
-    	m0, s0 = Pulse._raw_mean(current_node, stat, s.end_time, p1)
+    	m0, s0 = Pulse._raw_mean(current_node, stat, s.end_time, p1, where_clause)
     	s1 = s0 + s.sum_weight
     	m1 = (m0 * s0 + s.mean * s.sum_weight) / s1
     	s.update(mean: m1, sum_weight: s1, start_time: p0, end_time: p1)

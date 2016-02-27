@@ -50,10 +50,12 @@ ActiveRecord::Schema.define(version: 20160207214543) do
   create_table "stats", force: :cascade do |t|
     t.integer  "node_id"
     t.integer  "stat"
-    t.float    "mean",                     default: 0.0, null: false
-    t.float    "sum_weight",               default: 0.0, null: false
-    t.datetime "start_time", precision: 6
-    t.datetime "end_time",   precision: 6
+    t.integer  "period"
+    t.decimal  "where_clause"
+    t.float    "mean",                       default: 0.0, null: false
+    t.float    "sum_weight",                 default: 0.0, null: false
+    t.datetime "start_time",   precision: 6
+    t.datetime "end_time",     precision: 6
   end
 
   add_index "stats", ["node_id"], name: "index_stats_on_node_id", using: :btree

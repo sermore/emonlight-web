@@ -8,7 +8,7 @@ class Stat < ActiveRecord::Base
 
   def values
   	sv = stat_values.order(:group_by).index_by(&:group_by)
-    for i in 0..(StatService::GROUP_SIZE[stat - StatService::GROUP_BY_HOUR] - 1) do
+    for i in 0..(StatService.GROUP_SIZE(stat) - 1) do
     	sv[i] = stat_values.new(group_by: i) if sv[i].nil?
     end
     sv

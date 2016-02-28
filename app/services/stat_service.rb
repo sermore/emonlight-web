@@ -11,77 +11,74 @@ module StatService
   GROUP_BY_MONTH = 7
   GROUP_BY_DAILY_PER_MONTH = 8
 
-  STAT_TIME = [
-      3600.0,
-      86400.0,
-      2592000.0,
-      31536000.0,
-  ]
-
-  GROUP_SIZE = [24, 7, 31, 12, 12]
-
-  def GROUPING(i)
+  def self.STAT_TIME(i)
   	case i
-  	when 0
-  		"extract(hour from timezone('#{tz}', pulse_time))::integer"
-  	when 1
-  		"extract(dow from timezone('#{tz}', pulse_time))::integer"
-  	when 2
-  		"extract(day from timezone('#{tz}', pulse_time))::integer - 1"
-  	when 3
-  		"extract(month from timezone('#{tz}', pulse_time))::integer - 1"
-  	when 4
-  		"extract(month from timezone('#{tz}', pulse_time))::integer - 1"
+    when HOURLY, GROUP_BY_HOUR then 3600.0
+    when DAILY, GROUP_BY_WDAY then 86400.0
+    when MONTHLY, GROUP_BY_MONTH then 2592000.0
+    when YEARLY, GROUP_BY_DAILY_PER_MONTH then 31536000.0
+    end
+  end
+
+  def self.GROUP_SIZE(i)
+  	case i
+    when GROUP_BY_HOUR then 24
+    when GROUP_BY_WDAY then 7
+    when GROUP_BY_DAY_OF_MONTH then 31
+    when GROUP_BY_MONTH, GROUP_BY_DAILY_PER_MONTH then 12
+    end
+  end
+
+  def self.GROUPING(i)
+  	case i
+  	when GROUP_BY_HOUR then "extract(hour from timezone('#{tz}', pulse_time))::integer"
+  	when GROUP_BY_WDAY then "extract(dow from timezone('#{tz}', pulse_time))::integer"
+  	when GROUP_BY_DAY_OF_MONTH then "extract(day from timezone('#{tz}', pulse_time))::integer - 1"
+  	when GROUP_BY_MONTH, GROUP_BY_DAILY_PER_MONTH then "extract(month from timezone('#{tz}', pulse_time))::integer - 1"
   	end
   end
 
-  TIME_GROUPING = [
-      ->(t) { t.hour },
-      ->(t) { t.wday },
-      ->(t) { t.day - 1 },
-      ->(t) { t.month - 1 },
-      ->(t) { t.month - 1 }
-  ]
+  def self.TIME_GROUPING(i, t)
+  	case i
+  	when GROUP_BY_HOUR then t.hour
+    when GROUP_BY_WDAY then t.wday
+    when GROUP_BY_DAY_OF_MONTH then t.day - 1
+    when GROUP_BY_MONTH, GROUP_BY_DAILY_PER_MONTH then t.month - 1
+    end
+  end
 
-  DIFF_TIME = [
-      ->(t) { (t - t.change(min: 0)).to_f / 3600.0 }, # difference from start of hour
-      ->(t) { (t - t.change(hour: 0)).to_f / 86400.0 }, # difference from start of day
-      ->(t) { (t - t.change(hour: 0)).to_f / 86400.0 }, # same
-      ->(t) { (t - t.change(day: 1)).to_f / 2678400.0 }, # difference from first day of month
-      ->(t) { (t - t.change(hour: 0)).to_f / 86400.0 } # difference from start of day
-  ]
+  def self.DIFF_TIME(i, t)
+  	case i
+  	when GROUP_BY_HOUR then (t - t.change(min: 0)).to_f / 3600.0 # difference from start of hour
+    when GROUP_BY_WDAY, GROUP_BY_DAY_OF_MONTH, GROUP_BY_DAILY_PER_MONTH then (t - t.change(hour: 0)).to_f / 86400.0 # difference from start of day
+    when GROUP_BY_MONTH then (t - t.change(day: 1)).to_f / 2678400.0 # difference from first day of month
+    end
+  end
 
-  def WHERE_CLAUSE(q)
+  def self.WHERE_CLAUSE(q)
   	q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) > 8 and extract(hour from timezone('#{tz}', pulse_time)) <= 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
   	case q
-  	when :f1
-			q_f1
-		when :f2			
-			"not (#{q_f1})"
+  	when :f1 then q_f1
+		when :f2 then "not (#{q_f1})"
 		end
 	end
 
-  def SELECT(i)
+  def self.SELECT(i)
   	case i
-  	when 0
-  	"count(pulse_time) as sum_val, #{GROUPING(0)} as group_by, count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0)))::float as sum_weight"
-  when 1
-  	"count(pulse_time) sum_val, #{GROUPING(1)} as group_by, count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0)))::float as sum_weight"
-  when 2  		
-  	"count(pulse_time) as sum_val, #{GROUPING(2)} as group_by, count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0)))::float as sum_weight"
-  when 3
-  	"count(pulse_time) as sum_val, #{GROUPING(3)} as group_by, count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time))))::float as sum_weight"
-  when 4
-  	"count(pulse_time) as sum_val, #{GROUPING(4)} as group_by, count(distinct(extract(day from timezone('#{tz}', pulse_time))))::float as sum_weight"
+  	when GROUP_BY_HOUR then "count(pulse_time) as sum_val, #{GROUPING(i)} as group_by, count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0)))::float as sum_weight"
+  	when GROUP_BY_WDAY then "count(pulse_time) sum_val, #{GROUPING(i)} as group_by, count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0)))::float as sum_weight"
+  	when GROUP_BY_DAY_OF_MONTH then "count(pulse_time) as sum_val, #{GROUPING(i)} as group_by, count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0)))::float as sum_weight"
+  	when GROUP_BY_MONTH then "count(pulse_time) as sum_val, #{GROUPING(i)} as group_by, count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time))))::float as sum_weight"
+  	when GROUP_BY_DAILY_PER_MONTH then "count(pulse_time) as sum_val, #{GROUPING(i)} as group_by, count(distinct(extract(day from timezone('#{tz}', pulse_time))))::float as sum_weight"
   	end
   end
 
-  def tz
+  def self.tz
     Time.zone.now.formatted_offset
   end
 
   def _raw_mean(current_node, stat, t0, t1, where_clause = nil)
-    period = STAT_TIME[stat]
+    period = StatService.STAT_TIME(stat)
     # dt = t1 - t0
     # dt = period < dt ? 0.0 + dt / period : 1
     dt = 0.0 + (t1 - t0) / period
@@ -92,13 +89,7 @@ module StatService
     return v > 0 ? (v-1.0)/dt : 0.0, dt
   end
 
-  def _raw_mean_grouped(current_node, stat, t0, t1)
-  	stat_idx = stat - GROUP_BY_HOUR
-    subq = Pulse.where(node: current_node).group(GROUPING(stat_idx)).select(SELECT(stat_idx)).where("pulse_time >= ? and pulse_time <= ?", t0, t1)
-    Pulse.from(subq, :pulses).select(:sum_val, :sum_weight, :group_by)
-  end
-
-  def mean(current_node, stat, end_period, period = nil, where_clause = nil)
+  def _mean(current_node, stat, end_period, period = nil, where_clause = nil)
   	p0, p1 = verify_period(current_node, end_period, period)
     return 0.0 if p1.nil?
     # retrieve last calculated mean, throw exception if last date for calculated mean is greater than requested date
@@ -148,7 +139,7 @@ module StatService
  		# p1 = p1.nil? ? self.where(node: current_node).maximum(:pulse_time) : convert_date(p1)
  		p1 = p1.nil? ? Time.zone.now : convert_date(p1)
  		return nil, nil if p1.nil?
-    mm = self.where(node: current_node)
+    mm = Pulse.where(node: current_node)
     mm = mm.where("pulse_time + interval '? day' >= ?", period, p1) unless period.nil?
     mm = mm.where('pulse_time <= ?', p1).select('min(pulse_time) as min_t, max(pulse_time) as max_t')
     # min = mm.minimum(:pulse_time)
@@ -158,11 +149,33 @@ module StatService
     # return [min, p1]
   end
 
-  # def self.verify_limit(current_node, p1)
-  #   self.where(node: current_node).where('pulse_time < ?', p1).maximum(:pulse_time)
-  # end
+  def _raw_mean_grouped(current_node, stat, t0, t1, where_clause = nil)
+    subq = Pulse.where(node: current_node)
+    subq = subq.where(where_clause) unless where_clause.nil?
+    subq = subq.group(StatService.GROUPING(stat)).select(StatService.SELECT(stat)).where("pulse_time >= ? and pulse_time <= ?", t0, t1)
+    Pulse.from(subq, :pulses).select(:sum_val, :sum_weight, :group_by)
+  end
 
-  def grouped_mean(current_node, stat, end_period, period = nil)
+  def _do_raw_mean_grouped(current_node, stat, p0, p1)
+  	res = _raw_mean_grouped(current_node, stat, p0, p1)
+  	rv = res.index_by(&:group_by)
+  	g = StatService.TIME_GROUPING(stat, p0)
+  	unless rv[g].nil?
+  		ss_old = rv[g].sum_weight
+  		rv[g].sum_weight -= StatService.DIFF_TIME(stat, p0)
+  		# pp "--",p0,p1, g, ss_old, rv[g].sum_val, rv[g].sum_weight
+  	end
+  	g = StatService.TIME_GROUPING(stat, p1)
+  	unless rv[g].nil?
+  		ss_old = rv[g].sum_weight
+  		rv[g].sum_weight += StatService.DIFF_TIME(stat, p1) - 1.0
+  		rv[g].sum_val -= 1
+  		# pp "++", p0,p1, g, ss_old, rv[g].sum_val, rv[g].sum_weight
+  	end
+  	rv
+	end
+
+  def _grouped_mean(current_node, stat, end_period, period = nil)
   	p0, p1 = verify_period(current_node, end_period, period)
     # retrieve last calculated mean, throw exception if last date for calculated mean is greater than requested date
     s = Stat.current_stat_mean(current_node, stat, period)
@@ -184,7 +197,7 @@ module StatService
   		s.end_time = p0
   	elsif !s.start_time.nil? && s.start_time < p0
   		# query from initial interval to be removed
-  		rv = raw_mean_grouped(current_node, stat, s.start_time, p0)
+  		rv = _do_raw_mean_grouped(current_node, stat, s.start_time, p0)
   		# subtract extracted values from current stat_values
   		sv.each do |g, v|
  				m1, s1 = rv[g].nil? ? [0.0, 0.0] : [rv[g].sum_val, rv[g].sum_weight]
@@ -197,7 +210,7 @@ module StatService
   		end
   	end
   	# query additional data to be added to stat_values
-  	rv = raw_mean_grouped(current_node, stat, s.end_time, p1)
+  	rv = _do_raw_mean_grouped(current_node, stat, s.end_time, p1)
   	# add extracted values to stat_values
   	sv.each do |g, v|
  			m0, s0 = rv[g].nil? ? [0.0, 0.0] : [rv[g].sum_val, rv[g].sum_weight]
@@ -214,24 +227,73 @@ module StatService
     sv
   end
 
-  def raw_mean_grouped(current_node, stat, p0, p1)
-  	res = Pulse._raw_mean_grouped(current_node, stat, p0, p1)
-  	rv = res.index_by(&:group_by)
-  	stat_idx = stat - GROUP_BY_HOUR
-  	g = TIME_GROUPING[stat_idx].call(p0)
-  	unless rv[g].nil?
-  		ss_old = rv[g].sum_weight
-  		rv[g].sum_weight -= DIFF_TIME[stat_idx].call(p0)
-  		# pp "--",p0,p1, g, ss_old, rv[g].sum_val, rv[g].sum_weight
-  	end
-  	g = TIME_GROUPING[stat_idx].call(p1)
-  	unless rv[g].nil?
-  		ss_old = rv[g].sum_weight
-  		rv[g].sum_weight += DIFF_TIME[stat_idx].call(p1) - 1.0
-  		rv[g].sum_val -= 1
-  		# pp "++", p0,p1, g, ss_old, rv[g].sum_val, rv[g].sum_weight
-  	end
-  	rv
-	end
+  # def self.daily_mean(current_node, start_period = nil, end_period = nil, where_clause = nil)
+  def daily_mean(current_node, end_period = nil, period = nil)
+    # _mean(current_node, 86400.0, start_period, end_period, where_clause)
+    _mean(current_node, DAILY, end_period, period)
+  end
+
+  def hourly_mean(current_node, end_period = nil, period = nil)
+    _mean(current_node, HOURLY, end_period, period)
+  end
+
+  def monthly_mean(current_node, end_period = nil, period = nil)
+    _mean(current_node, MONTHLY, end_period, period)
+  end
+
+  def yearly_mean(current_node, end_period = nil, period = nil)
+    _mean(current_node, YEARLY, end_period, period)
+  end
+
+  def weekly(current_node, end_period = nil, period = nil)
+    # _extract(current_node,
+    #          "extract(dow from timezone('#{tz}', pulse_time))::integer",
+    #          "count(pulse_time)/1000.0 / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(dow from timezone('#{tz}', pulse_time))::integer as time_period",
+    #          "extract(dow from timezone('#{tz}', pulse_time))::integer",
+    #          start_period, end_period
+    # )
+		_grouped_mean(current_node, GROUP_BY_WDAY, end_period, period)
+  end
+
+  def daily(current_node, end_period = nil, period = nil)
+		_grouped_mean(current_node, GROUP_BY_HOUR, end_period, period)
+    # _extract(current_node,
+    #          "extract(hour from timezone('#{tz}', pulse_time))::integer",
+    #          "count(pulse_time) / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(hour from timezone('#{tz}', pulse_time))::integer as time_period",
+    #          "extract(hour from timezone('#{tz}', pulse_time))::integer",
+    #          start_period, end_period
+    # )
+  end
+
+  def monthly(current_node, end_period = nil, period = nil)
+		_grouped_mean(current_node, GROUP_BY_DAY_OF_MONTH, end_period, period)
+    # _extract(current_node,
+    #          "extract(day from timezone('#{tz}', pulse_time))::integer",
+    #          "count(pulse_time)/1000.0 / count(distinct(trunc(extract(epoch from timezone('#{tz}', pulse_time))/86400.0))) as power, extract(day from timezone('#{tz}', pulse_time))::integer as time_period",
+    #          "extract(day from timezone('#{tz}', pulse_time))::integer",
+    #          start_period, end_period
+    # )
+  end
+
+  def yearly(current_node, end_period = nil, period = nil)
+		_grouped_mean(current_node, GROUP_BY_MONTH, end_period, period)
+    # _extract(current_node,
+    #          "extract(month from timezone('#{tz}', pulse_time))::integer",
+    #          "count(pulse_time)/1000.0 / count(distinct(extract(year from timezone('#{tz}', pulse_time)) * 12 + extract(month from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
+    #          "extract(month from timezone('#{tz}', pulse_time))::integer",
+    #          start_period, end_period
+    # )
+  end
+
+
+  def daily_per_month(current_node, end_period = nil, period = nil)
+		_grouped_mean(current_node, GROUP_BY_DAILY_PER_MONTH, end_period, period)
+    # _extract(current_node,
+    #          "extract(month from timezone('#{tz}', pulse_time))::integer",
+    #          "count(pulse_time)/1000.0 / count(distinct(extract(day from timezone('#{tz}', pulse_time)))) as power, extract(month from timezone('#{tz}', pulse_time))::integer as time_period",
+    #          "extract(month from timezone('#{tz}', pulse_time))::integer",
+    #          start_period, end_period
+    # )
+  end
 
 end

@@ -46,4 +46,11 @@ class StatsControllerTest < ActionController::TestCase
     # pp @response.body
   end
 
+  test "daily per month data" do
+    n = Node.find_by_title(:fixed60)
+    get(:daily_per_month_data, {node_id: n.id, d: '2015-05-09' }, format: :json)
+    assert_response :success
+    # pp @response.body
+  end
+
 end

@@ -20,8 +20,8 @@ class StatServiceTest < ActiveSupport::TestCase
 		assert_equal([0.0, 1], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-02'), StatService.WHERE_CLAUSE(:f1)))
 		assert_equal([164.75, 4.0], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-05'), StatService.WHERE_CLAUSE(:f1)))
 		assert_equal([1275.0, 4.0], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-05'), StatService.WHERE_CLAUSE(:f2)))
-		assert_equal([332.3076923076923, 6.5], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-07 12:00'), StatService.WHERE_CLAUSE(:f1)))
-		assert_equal([1107.5384615384614, 6.5], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-07 12:00'), StatService.WHERE_CLAUSE(:f2)))
+		assert_equal([341.53846153846155, 6.5], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-07 12:00'), StatService.WHERE_CLAUSE(:f1)))
+		assert_equal([1098.3076923076924, 6.5], _raw_mean(Node.find_by_title(:fixed60), StatService::DAILY, convert_date('2015-05-01'), convert_date('2015-05-07 12:00'), StatService.WHERE_CLAUSE(:f2)))
 	end
 
 	test "mean" do
@@ -40,8 +40,8 @@ class StatServiceTest < ActiveSupport::TestCase
 		assert_equal(1275.0, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-05', nil, StatService.WHERE_CLAUSE(:f2)))
 		assert_equal(263.6, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-06', nil, StatService.WHERE_CLAUSE(:f1)))
 		assert_equal(1176.0, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-06', nil, StatService.WHERE_CLAUSE(:f2)))
-		assert_equal(332.0, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', nil, StatService.WHERE_CLAUSE(:f1)))
-		assert_equal(1107.5384615384614, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', nil, StatService.WHERE_CLAUSE(:f2)))
+		assert_equal(341.2307692307692, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', nil, StatService.WHERE_CLAUSE(:f1)))
+		assert_equal(1098.3076923076924, _mean(Node.find_by_title(:fixed60), StatService::DAILY, '2015-05-07 12:00', nil, StatService.WHERE_CLAUSE(:f2)))
 	end
 
 	test "mean_on_period" do
@@ -154,6 +154,28 @@ class StatServiceTest < ActiveSupport::TestCase
 	test "daily per month"  do
 		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 1440.0, 6.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-09', 6).map {|k,v| [k, v.mean, v.sum_weight]})
 		assert_equal([[0, 480.0, 9.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 480.0, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-10').map {|k,v| [k, v.mean, v.sum_weight]})
+	end
+
+	test "daily_slot_per_month" do
+		tz = Time.zone.now.formatted_offset		
+		q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) >= 8 and extract(hour from timezone('#{tz}', pulse_time)) < 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
+		# q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) >= 8 and extract(hour from timezone('#{tz}', pulse_time)) < 19)"
+		q_f2 = "not (#{q_f1})"
+		# assert_equal([[5, 0.66]], daily_per_month(Node.find_by_title(:fixed60), q_f1, '2015-05-04', '2015-05-09'))
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 204.60710441334768, 4.5159722222222225], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-05 12:23', nil, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 1235.6143318468398, 4.5159722222222225], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-05 12:23', nil, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 264.20000000000033, 4.999999999999997], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-06 00:00', nil, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 1176.2, 4.999999999999997], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-06 00:00', nil, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 383.2550639927441, 6.8909722222222225], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-07 21:23', nil, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 412.6249999999999, 7.999999999999997], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-09', nil, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 1027.75, 8.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 0.0, 0.0]], daily_per_month(Node.find_by_title(:fixed60), '2015-05-09', nil, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
+
+		assert_equal([[0, 122.22222222222223, 9.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 141.93548387096774, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-10', 90, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 357.8888888888889, 9.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 338.06451612903226, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-10', 90, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 0.0, 0.5229166666666667], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 141.93548387096774, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-1 12:34', nil, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 481.91235059760953, 0.5229166666666667], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 338.06451612903226, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-1 12:34', nil, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 122.22222222222223, 9.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 141.935483870968, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-10', nil, q_f1).map {|k,v| [k, v.mean, v.sum_weight]})
+		assert_equal([[0, 358.00000000000006, 9.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 338.064516129032, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-10', nil, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
 	end
 
 end

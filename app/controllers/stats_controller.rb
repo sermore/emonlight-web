@@ -174,33 +174,29 @@ class StatsController < ApplicationController
 				{id: 'mean_total', label: 'Total Mean', type: 'number'}
 			]
 
-			tz = Time.zone.now.formatted_offset
-			q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) >= 8 and extract(hour from timezone('#{tz}', pulse_time)) < 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
-			q_f2 = "not (#{q_f1})"
+			q_f1 = StatService.WHERE_CLAUSE(:f1)
+			q_f2 = StatService.WHERE_CLAUSE(:f2)
 			mean = Pulse.daily_mean(current_node)/1000.0
-			mean_f1 = Pulse.daily_mean(current_node, t0, t1, q_f1)/1000.0
-			mean_f2 = Pulse.daily_mean(current_node, t0, t1, q_f2)/1000.0
-			f1 = Pulse.daily_slot_per_month(current_node, q_f1, t0, t1)
-			f2 = Pulse.daily_slot_per_month(current_node, q_f2, t0, t1)
+			mean_f1 = Pulse.daily_mean(current_node, t1, 365, q_f1)/1000.0
+			mean_f2 = Pulse.daily_mean(current_node, t1, 365, q_f2)/1000.0
+			f1 = Pulse.daily_slot_per_month(current_node, t1, 365, q_f1)
+			f2 = Pulse.daily_slot_per_month(current_node, t1, 365, q_f2)
 			# pp "MEAN=", mean, mean_f1, mean_f2
 
-			d = Time.zone.today.in_time_zone - 11.month
 			data = Array.new(7) { Array.new(12, 0) }
+			m = (t1.month - 1) % 12
 			(0 .. 11).each do |i|
-				m = d.month
-				data[0][i] = Date::MONTHNAMES[m]
-				v = f1.bsearch {|x| x.year >= d.year && x.month >= d.month }
-				data[1][i] = v.power if v && v.year == d.year && v.month == d.month
-				v = f2.bsearch {|x| x.year >= d.year && x.month >= d.month }
-				data[2][i] = v.power if v && v.year == d.year && v.month == d.month
+				m = (m + 1) % 12
+				data[0][i] = Date::MONTHNAMES[m+1]
+				data[1][i] = f1[m].mean/1000
+				data[2][i] = f2[m].mean/1000
 				data[3][i] = data[1][i] + data[2][i]
 				data[4][i] = mean_f1
 				data[5][i] = mean_f2
 				data[6][i] = mean
-				d += 1.month
 			end
 			data = data.transpose
-			data.slice!(0) while data[0][1] == 0 && data[0][2] == 0
+			# data.slice!(0) while data[0][1] == 0 && data[0][2] == 0
 			{ last_update: Time.zone.now, data: to_data_table(columns, data) }
 		end
   	render json: q
@@ -210,19 +206,18 @@ class StatsController < ApplicationController
 		opts = { force: params[:force] == "true", expires_in: 1.hours }
 		q = Rails.cache.fetch("#{current_node.cache_key}/slot_percentage_data", opts) do
 			t1 = params[:d].nil? ? Time.zone.today.in_time_zone + 1.day : Time.zone.parse(params[:d])
-			t0 = t1 - 12.month
+			# t0 = t1 - 12.month
 
 			columns = [ {id: 'slot_names', label: 'Slots', type: 'string'},
 				{id: 'slot', label: '%', type: 'number'},
 				{id: 'sum', label: 'Total', type: 'number', role: 'annotation'}
 			]
 
-			tz = Time.zone.now.formatted_offset
-			q_f1 = "(extract(hour from timezone('#{tz}', pulse_time)) >= 8 and extract(hour from timezone('#{tz}', pulse_time)) < 19 and extract(dow from timezone('#{tz}', pulse_time)) between 1 and 5 and (extract(month from timezone('#{tz}', pulse_time)), extract(day from timezone('#{tz}', pulse_time))) not in ((1,1),(1,6),(4,25),(5,1),(6,2),(8,15),(11,1),(12,8),(12,25),(12,26)))"
-			q_f2 = "not (#{q_f1})"
+			q_f1 = StatService.WHERE_CLAUSE(:f1)
+			q_f2 = StatService.WHERE_CLAUSE(:f2)
 			# mean = Pulse.daily_mean(current_node)/1000.0
-			mean_f1 = Pulse.daily_mean(current_node, t0, t1, q_f1)/1000.0
-			mean_f2 = Pulse.daily_mean(current_node, t0, t1, q_f2)/1000.0
+			mean_f1 = Pulse.daily_mean(current_node, t1, 365, q_f1)/1000.0
+			mean_f2 = Pulse.daily_mean(current_node, t1, 365, q_f2)/1000.0
 			# pp "MEAN=", mean, mean_f1, mean_f2
 			data = [ ["F1", mean_f1, mean_f1 + mean_f2], ["F2", mean_f2, mean_f1 + mean_f2] ]
 			{ last_update: Time.zone.now, data: to_data_table(columns, data) }

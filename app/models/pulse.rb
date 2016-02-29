@@ -79,24 +79,24 @@ class Pulse < ActiveRecord::Base
   #   from(subq, :pulses).pluck(:time_period, :power)
   # end
 
-  def self.daily_slot_per_month(current_node, slot_clause, start_period = nil, end_period = nil)
-    t0, t1 = set_period(current_node, start_period, end_period)
-    days = (t1 - t0)/86400.0
-    t11 = t1 - 86400
-    q = Pulse.where(node: current_node)
-            .where(slot_clause)
-            .group("extract(year from timezone('#{StatService.tz}', pulse_time))::integer, extract(month from timezone('#{StatService.tz}', pulse_time))::integer")
-            .order("extract(year from timezone('#{StatService.tz}', pulse_time))::integer, extract(month from timezone('#{StatService.tz}', pulse_time))::integer")
-            .where('pulse_time >= :start_p and pulse_time < :end_p', {start_p: t0, end_p: t1})
-            .select("count(pulse_time)/1000.0 as power, extract(month from timezone('#{StatService.tz}', pulse_time))::integer as month, extract(year from timezone('#{StatService.tz}', pulse_time))::integer as year")
-    # .pluck(:month, :year, :power)
-    q.each do |r|
-      s0 = t0.month == r.month && t0.year == r.year ? t0.day : 1
-      s1 = t11.month == r.month && t11.year == r.year ? t11.day : Time.zone.local(r.year, r.month, 1).end_of_month.day
-      r.power = r.power / (s1 - s0 + 1)
-    end
-    # pp q
-  end
+  # def self.daily_slot_per_month(current_node, slot_clause, start_period = nil, end_period = nil)
+  #   t0, t1 = set_period(current_node, start_period, end_period)
+  #   days = (t1 - t0)/86400.0
+  #   t11 = t1 - 86400
+  #   q = Pulse.where(node: current_node)
+  #           .where(slot_clause)
+  #           .group("extract(year from timezone('#{StatService.tz}', pulse_time))::integer, extract(month from timezone('#{StatService.tz}', pulse_time))::integer")
+  #           .order("extract(year from timezone('#{StatService.tz}', pulse_time))::integer, extract(month from timezone('#{StatService.tz}', pulse_time))::integer")
+  #           .where('pulse_time >= :start_p and pulse_time < :end_p', {start_p: t0, end_p: t1})
+  #           .select("count(pulse_time)/1000.0 as power, extract(month from timezone('#{StatService.tz}', pulse_time))::integer as month, extract(year from timezone('#{StatService.tz}', pulse_time))::integer as year")
+  #   # .pluck(:month, :year, :power)
+  #   q.each do |r|
+  #     s0 = t0.month == r.month && t0.year == r.year ? t0.day : 1
+  #     s1 = t11.month == r.month && t11.year == r.year ? t11.day : Time.zone.local(r.year, r.month, 1).end_of_month.day
+  #     r.power = r.power / (s1 - s0 + 1)
+  #   end
+  #   # pp q
+  # end
 
   def self.import_xx(node_id, file, truncate = true)
     t0 = 0

@@ -236,7 +236,7 @@ module StatService
         m1 = (m0 + v.mean * v.sum_weight) / s1
       end
       # FIXME
-      raise "fail #{v}" if v.mean < 0 || v.sum_weight < 0
+      # raise "fail #{v}" if v.mean < 0 || v.sum_weight < 0
       v.update(mean: m1, sum_weight: s1)
     end
     # save new starting and ending periods

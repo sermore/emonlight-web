@@ -40,8 +40,8 @@ class StatsController < ApplicationController
 			(0 .. 11).each do |i|
 				m = (m + 1) % 12
 				data[0][i] = Date::MONTHNAMES[m+1]
-				data[1][i] = all[m].mean
-				data[2][i] = last[m].mean
+				data[1][i] = all[m].mean/1000.0
+				data[2][i] = last[m].mean/1000.0
 				data[3][i] = mean_all
 				data[4][i] = mean_last
 			end
@@ -71,8 +71,8 @@ class StatsController < ApplicationController
 			(0..30).each do |i|
 				d = (d + 1) % 31
 				data[0][i] = d + 1
-				data[1][i] = all[d].mean
-				data[2][i] = last[d].mean
+				data[1][i] = all[d].mean/1000.0
+				data[2][i] = last[d].mean/1000.0
 				data[3][i] = mean_all
 				data[4][i] = mean_last
 			end
@@ -104,8 +104,8 @@ class StatsController < ApplicationController
 			((now-6) .. now).each.with_index do |d, i|
 				dd = d.wday
 				data[0][i] = Date::DAYNAMES[dd]
-				data[1][i] = all[dd].mean
-				data[2][i] = last[dd].mean
+				data[1][i] = all[dd].mean/1000.0
+				data[2][i] = last[dd].mean/1000.0
 				data[3][i] = mean_all
 				data[4][i] = mean_last
 			end
@@ -130,7 +130,7 @@ class StatsController < ApplicationController
 
 			mean_all, mean_last = Pulse.hourly_mean(current_node), Pulse.hourly_mean(current_node, t1, 1)
 			all, last = Pulse.daily(current_node), Pulse.daily(current_node, t1, 1)
-			t = Time.zone.now - 86400
+			t = Time.zone.now
 			data = Array.new(5) { Array.new(24, 0) }
 			(0 .. 23).each do |i|
 				t += 3600

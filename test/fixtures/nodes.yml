@@ -25,3 +25,7 @@ monthly:
   user: test1
   authentication_token: monthly
 
+real:
+  title: real
+  user: test1
+  authentication_token: real

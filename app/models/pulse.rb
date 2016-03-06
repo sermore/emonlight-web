@@ -4,21 +4,6 @@ class Pulse < ActiveRecord::Base
   belongs_to :node
   extend StatService
 
-  # def self._raw_mean(current_node, grouping, start_period = nil, end_period = nil)
-  #   subq = self.where(node: current_node).group(GROUPING[grouping]).select("count(*) as mean, #{GROUPING[grouping]} as time_group")
-  #   subq = subq.where('pulse_time >= ?', start_period) unless start_period.nil?
-  #   subq = subq.where('pulse_time < ?', end_period) unless end_period.nil?
-  #   if start_period.nil?
-  #     subq = from(subq, :pulses).select("avg(mean) as mean, count(*) as sum_weight")
-  #                # .pluck(:mean, :sum_weight)
-  #   else
-  #     # subq = subq.pluck(:mean, :time_group)
-  #   end
-  #   # pp subq
-  #   subq
-  # end
-
-
   def self.raw(current_node, start_period, end_period, len = 100, limit = nil, offset = nil)
     # p = (Time.zone.parse(end_period) - Time.zone.parse(start_period)) / len
     #		begin
@@ -32,71 +17,22 @@ class Pulse < ActiveRecord::Base
     if step > 300
       #.select("min(pulse_time) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
       where('node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', {node: current_node, start_p: start_v, end_p: end_v})
-          .group("trunc(extract(epoch from timezone('#{tz}', pulse_time)) / #{step})")
+          .group("trunc(extract(epoch from timezone('#{StatService.tz}', pulse_time)) / #{step})")
           .limit(limit)
           .offset(offset)
-          .order("trunc(extract(epoch from timezone('#{tz}', pulse_time)) / #{step})")
-          .pluck("min(timezone('#{tz}', pulse_time)) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
+          .order("trunc(extract(epoch from timezone('#{StatService.tz}', pulse_time)) / #{step})")
+          .pluck("min(timezone('#{StatService.tz}', pulse_time)) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
       # .map { |r| [ r.pulse_time, r.power ] }
     else
       where(['node_id = :node and pulse_time > :start_p and pulse_time < :end_p', {node: current_node, start_p: start_period, end_p: end_period}])
           .limit(limit)
           .offset(offset)
           .order(:pulse_time)
-          .select("timezone('#{tz}', pulse_time) as pulse_time", :pulse_time)
-          .pluck("timezone('#{tz}', pulse_time) as pulse_time", :power)
+          .select("timezone('#{StatService.tz}', pulse_time) as pulse_time", :pulse_time)
+          .pluck("timezone('#{StatService.tz}', pulse_time) as pulse_time", :power)
       # .map { |r| [ r.pulse_time, r.power ] }
     end
   end
-
-  # def self._mean(current_node, period, start_period = nil, end_period = nil, where_clause = nil)
-  #   t0, t1 = set_period(current_node, start_period, end_period)
-  #   dt = t1 - t0
-  #   dt = period < dt ? dt / period : 1
-  #   # pp t0, t1, dt
-  #   Pulse.where(node: current_node)
-  #       .where('pulse_time >= :start_p and pulse_time < :end_p', {start_p: t0, end_p: t1})
-  #       .where(where_clause)
-  #       .count()/dt
-  # end
-
-
-  # def self._mean(current_node, group_clause, start_period = nil, end_period = nil, where_clause = nil)
-  #   subq = Pulse.where(node: current_node)
-  #              .group(group_clause)
-  #              .select('count(*) as power')
-  #   subq = subq.where('pulse_time >= :start_p and pulse_time < :end_p', {start_p: start_period, end_p: end_period}) if start_period != nil && end_period != nil
-  #   from(subq, :pulses).average(:power)
-  # end
-
-  # def self._extract(current_node, group_clause, select_clause, order_clause, start_period = nil, end_period = nil, where_clause = nil)
-  #   subq = Pulse.where(node: current_node)
-  #              .where(where_clause)
-  #              .group(group_clause)
-  #              .select(select_clause)
-  #              .order(order_clause)
-  #   subq = subq.where('pulse_time >= :start_p and pulse_time < :end_p', {start_p: start_period, end_p: end_period}) if start_period != nil && end_period != nil
-  #   from(subq, :pulses).pluck(:time_period, :power)
-  # end
-
-  # def self.daily_slot_per_month(current_node, slot_clause, start_period = nil, end_period = nil)
-  #   t0, t1 = set_period(current_node, start_period, end_period)
-  #   days = (t1 - t0)/86400.0
-  #   t11 = t1 - 86400
-  #   q = Pulse.where(node: current_node)
-  #           .where(slot_clause)
-  #           .group("extract(year from timezone('#{StatService.tz}', pulse_time))::integer, extract(month from timezone('#{StatService.tz}', pulse_time))::integer")
-  #           .order("extract(year from timezone('#{StatService.tz}', pulse_time))::integer, extract(month from timezone('#{StatService.tz}', pulse_time))::integer")
-  #           .where('pulse_time >= :start_p and pulse_time < :end_p', {start_p: t0, end_p: t1})
-  #           .select("count(pulse_time)/1000.0 as power, extract(month from timezone('#{StatService.tz}', pulse_time))::integer as month, extract(year from timezone('#{StatService.tz}', pulse_time))::integer as year")
-  #   # .pluck(:month, :year, :power)
-  #   q.each do |r|
-  #     s0 = t0.month == r.month && t0.year == r.year ? t0.day : 1
-  #     s1 = t11.month == r.month && t11.year == r.year ? t11.day : Time.zone.local(r.year, r.month, 1).end_of_month.day
-  #     r.power = r.power / (s1 - s0 + 1)
-  #   end
-  #   # pp q
-  # end
 
   def self.import_xx(node_id, file, truncate = true)
     t0 = 0

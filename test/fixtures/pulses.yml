@@ -71,3 +71,7 @@ pulse_fixed20_<%= n += 1 %>:
   t += (3600.0/pwh)/86400.0
   # puts t
 end %>
+
+pulse_real_1:
+  node: real
+  pulse_time: "2015-04-25 15:00:00"

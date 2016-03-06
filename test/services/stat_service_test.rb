@@ -178,4 +178,14 @@ class StatServiceTest < ActiveSupport::TestCase
 		assert_equal([[0, 358.00000000000006, 9.0], [1, 0.0, 0.0], [2, 0.0, 0.0], [3, 0.0, 0.0], [4, 0.0, 0.0], [5, 0.0, 0.0], [6, 0.0, 0.0], [7, 0.0, 0.0], [8, 0.0, 0.0], [9, 0.0, 0.0], [10, 0.0, 0.0], [11, 338.064516129032, 31.0]], daily_per_month(Node.find_by_title(:fixed20), '2015-01-10', nil, q_f2).map {|k,v| [k, v.mean, v.sum_weight]})
 	end
 
+	test "incremental stat" do
+		assert(daily_mean(Node.find_by_title(:real), '2015-05-01 06:44:56') > 0)
+		assert(daily_mean(Node.find_by_title(:real), '2015-08-12 15:23:11') > 0)
+		assert(daily_mean(Node.find_by_title(:real), '2015-10-21 02:56:23') > 0)
+
+		assert(daily(Node.find_by_title(:real), '2015-05-05 12:25:14', 1).all? {|k,v| v.mean >= 0 && v.sum_weight >= 0 } )
+		assert(daily(Node.find_by_title(:real), '2015-05-06 00:11:56', 1).all? {|k,v| v.mean >= 0 && v.sum_weight >= 0 } )
+
+	end
+
 end

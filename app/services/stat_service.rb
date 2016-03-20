@@ -14,7 +14,7 @@ module StatService
   def self.STAT_TIME(i)
     case i
     when HOURLY, GROUP_BY_HOUR then 3600.0
-    when DAILY, GROUP_BY_WDAY then 86400.0
+    when DAILY, GROUP_BY_WDAY, GROUP_BY_DAY_OF_MONTH then 86400.0
     when MONTHLY, GROUP_BY_MONTH then 2592000.0
     when YEARLY, GROUP_BY_DAILY_PER_MONTH then 31536000.0
     end
@@ -153,7 +153,8 @@ module StatService
     # min = mm.minimum(:pulse_time)
     # return nil, nil if min.nil?
     return nil, nil if mm[0].min_t.nil?
-    return [mm[0].min_t, mm[0].max_t]
+    # workaround to convert timestamp to correct timezone, as rails fails to do correct conversion with custom fields
+    return [Time.zone.parse(mm[0].attributes_before_type_cast['min_t']), Time.zone.parse(mm[0].attributes_before_type_cast['max_t'])]
     # return [min, p1]
   end
 
@@ -204,6 +205,26 @@ module StatService
     return s.empty_values if s.end_time.nil?
     sv = s.values
     return sv if s.end_time == p1
+    # in case of period not nil, verify if there are holes in data
+    if false && !period.nil? && holes_in_data(current_node, stat, p0, p1)
+      # calculate stat for whole period
+      calculate_stat_for_whole_period(current_node, stat, p0, p1, s, sv, where_clause)
+    else
+      # calculate stat incrementally
+      calculate_stat_incrementally(current_node, stat, p0, p1, s, sv, where_clause)
+    end
+    # save new starting and ending periods
+    s.update(start_time: p0, end_time: p1)
+    sv
+  end
+
+  def holes_in_data(current_node, stat, p0, p1)
+    power = 3600.0 / StatService.STAT_TIME(stat)
+    r = Pulse.where(node: current_node).where("pulse_time >= ? and pulse_time <= ?", p0, p1).where("power < ?", power).limit(1)
+    !r.empty?
+  end
+
+  def calculate_stat_incrementally(current_node, stat, p0, p1, s, sv, where_clause)
     if s.end_time <= p0
       sv.each do |g, v|
         v.mean = 0.0
@@ -217,10 +238,12 @@ module StatService
       sv.each do |g, v|
         m1, s1 = rv[g].nil? ? [0.0, 0.0] : [rv[g].sum_val, rv[g].sum_weight]
         # throw :mean_fails if v.sum_weight == 0
-        if v.sum_weight > 0
-          s2 = v.sum_weight - s1
+        s2 = v.sum_weight - s1
+        if v.sum_weight > 0 && s2 > 0
           v.mean = (v.mean * v.sum_weight - m1) / s2
           v.sum_weight = s2
+        else
+          v.mean, v.sum_weight = 0.0, 0.0
         end
       end
     end
@@ -239,9 +262,14 @@ module StatService
       # raise "fail #{v}" if v.mean < 0 || v.sum_weight < 0
       v.update(mean: m1, sum_weight: s1)
     end
-    # save new starting and ending periods
-    s.update(start_time: p0, end_time: p1)
-    sv
+  end
+
+  def calculate_stat_for_whole_period(current_node, stat, p0, p1, s, sv, where_clause)
+    rv = _do_raw_mean_grouped(current_node, stat, p0, p1, where_clause)
+    sv.each do |g, v|
+      m, s = rv[g].nil? || rv[g].sum_weight == 0 ? [0.0, 0.0] : [rv[g].sum_val / rv[g].sum_weight, rv[g].sum_weight]
+      v.update(mean: m, sum_weight: s)
+    end
   end
 
   # def self.daily_mean(current_node, start_period = nil, end_period = nil, where_clause = nil)

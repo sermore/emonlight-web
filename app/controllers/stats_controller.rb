@@ -188,8 +188,8 @@ class StatsController < ApplicationController
 			(0 .. 11).each do |i|
 				m = (m + 1) % 12
 				data[0][i] = Date::MONTHNAMES[m+1]
-				data[1][i] = f1[m].mean/1000
-				data[2][i] = f2[m].mean/1000
+				data[1][i] = f1[m].mean/1000.0
+				data[2][i] = f2[m].mean/1000.0
 				data[3][i] = data[1][i] + data[2][i]
 				data[4][i] = mean_f1
 				data[5][i] = mean_f2

@@ -6,12 +6,17 @@ class StatTest < ActiveSupport::TestCase
   Time.zone = 'Europe/Rome'
 
   test "tz" do
-    s = Stat.new(stat: Stat::GROUP_BY_WDAY, node: Node.find_by_title('wday'))
-    s.node.time_zone = "Central America"
-    assert_equal("extract(dow from timezone('Central America', timezone('UTC', pulse_time)))::integer", s.GROUPING())
+    n = Node.find_by_title('wday')
+    assert_equal('Europe/Rome', Stat.tzn(n))
+    n.time_zone = 'Rome'
+    assert_equal('Europe/Rome', Stat.tzn(n))
+    s = Stat.new(stat: Stat::GROUP_BY_WDAY, node: n)
+    s.node.time_zone = 'Central America'
+    assert_equal("extract(dow from timezone('America/Guatemala', timezone('UTC', pulse_time)))::integer", s.GROUPING())
     s.node.time_zone = "UTC"
-    assert_equal("extract(dow from timezone('UTC', timezone('UTC', pulse_time)))::integer", s.GROUPING())
-    s.node.time_zone = "Europe/Rome"
+    assert_equal("extract(dow from timezone('Etc/UTC', timezone('UTC', pulse_time)))::integer", s.GROUPING())
+    s.node.time_zone = "Rome"
+    assert_equal("Europe/Rome", s.tz)
     assert_equal("extract(dow from timezone('Europe/Rome', timezone('UTC', pulse_time)))::integer", s.GROUPING())
   end
 

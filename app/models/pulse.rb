@@ -15,7 +15,7 @@ class Pulse < ActiveRecord::Base
 #		end
     if step > 300
       #.select("min(pulse_time) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
-      tz = node.time_zone
+      tz = Stat.tzn(current_node)
       where('node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', {node: current_node, start_p: start_v, end_p: end_v})
           .group("trunc(extract(epoch from timezone('#{tz}', timezone('UTC', pulse_time))) / #{step})")
           .limit(limit)

@@ -17,7 +17,7 @@ function getData(remoteUrl, chart, options, params, offset) {
     if (json.data.length > 0) {
       // console.log("Request successful!", json);
       var data = new google.visualization.DataTable(json.data);
-      options['title'] += ' - Last update ' + getDateTZ(json.last_update, offset).toLocaleTimeString();
+      options['title'] += ' - Last update ' + getDateTZ(json.last_update, offset).toLocaleString();
       chart.draw(data, options);
     }
   });

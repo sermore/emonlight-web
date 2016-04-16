@@ -21,8 +21,7 @@ module MeanCalculator
   P_TRUNC = [nil, 'hour', 'day', 'month', 'year', 'day']
 
   def tz()
-    # Time.zone.now.formatted_offset
-    self.node.time_zone unless self.node.nil?
+    self.class.tzn(self.node)
   end
 
   def STAT_TIME()
@@ -301,6 +300,17 @@ module MeanCalculator
       else
         s.save
         stat < GROUP_BY_HOUR ? s.calc_mean(time) : s.grouped_mean(time)
+      end
+    end
+
+    def tzn(node)
+      # Time.zone.now.formatted_offset
+      if node.nil? || node.time_zone.nil?
+        'Etc/UTC'
+      else
+        tz = node.time_zone
+        q =ActiveSupport::TimeZone::MAPPING[tz]
+        q.nil? ? tz : q
       end
     end
 

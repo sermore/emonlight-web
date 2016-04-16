@@ -1,3 +1,0 @@
-TODO
-* remove dependance between job and Stat id
-* fix time zone handling, the rails-populated list of time-zones is incompatible with time zone values accepted by postgres

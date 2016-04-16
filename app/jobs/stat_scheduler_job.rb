@@ -6,7 +6,8 @@ class StatSchedulerJob < ActiveJob::Base
   end
 
   def perform(*args)
-    Stat.initialize_stats.each do |stat|
+    # TODO remove dependance between job and Stat id
+  Stat.initialize_stats.each do |stat|
       StatUpdaterJob.perform_later(stat)
     end
     Stat.find_stats_to_update(300).find_each do |stat|

@@ -4,7 +4,7 @@ class CreateStats < ActiveRecord::Migration
       t.references :node, index: true, foreign_key: true
       t.integer :stat
       t.integer :period
-      t.decimal :where_clause
+      t.string :where_clause
       t.float :mean, null: false, default: 0
       t.float :sum_weight, null: false, default: 0
       t.datetime :start_time, limit: 6

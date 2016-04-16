@@ -2,7 +2,6 @@ require 'csv'
 
 class Pulse < ActiveRecord::Base
   belongs_to :node
-  extend StatService
 
   def self.raw(current_node, start_period, end_period, len = 100, limit = nil, offset = nil)
     # p = (Time.zone.parse(end_period) - Time.zone.parse(start_period)) / len
@@ -16,20 +15,21 @@ class Pulse < ActiveRecord::Base
 #		end
     if step > 300
       #.select("min(pulse_time) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
+      tz = node.time_zone
       where('node_id = :node and pulse_time >= :start_p and pulse_time < :end_p', {node: current_node, start_p: start_v, end_p: end_v})
-          .group("trunc(extract(epoch from timezone('#{StatService.tz}', pulse_time)) / #{step})")
+          .group("trunc(extract(epoch from timezone('#{tz}', timezone('UTC', pulse_time))) / #{step})")
           .limit(limit)
           .offset(offset)
-          .order("trunc(extract(epoch from timezone('#{StatService.tz}', pulse_time)) / #{step})")
-          .pluck("min(timezone('#{StatService.tz}', pulse_time)) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
+          .order("trunc(extract(epoch from timezone('#{tz}', timezone('UTC', pulse_time))) / #{step})")
+          .pluck("min(pulse_time) + (max(pulse_time) - min(pulse_time))/2.0 as pulse_time, count(*) * 3600.0 / #{step} as power")
       # .map { |r| [ r.pulse_time, r.power ] }
     else
       where(['node_id = :node and pulse_time > :start_p and pulse_time < :end_p', {node: current_node, start_p: start_period, end_p: end_period}])
           .limit(limit)
           .offset(offset)
           .order(:pulse_time)
-          .select("timezone('#{StatService.tz}', pulse_time) as pulse_time", :pulse_time)
-          .pluck("timezone('#{StatService.tz}', pulse_time) as pulse_time", :power)
+          .select(:pulse_time)
+          .pluck(:pulse_time, :power)
       # .map { |r| [ r.pulse_time, r.power ] }
     end
   end

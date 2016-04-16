@@ -4,13 +4,14 @@ class NodesControllerTest < ActionController::TestCase
 	include Devise::TestHelpers
 
   test "read" do
+		Time.zone = 'Europe/Rome'
   	node = Node.find_by_title('fixed60')
     assert_equal(Time.zone.parse('2015-05-09 23:59:00'), Pulse.where(node: node).maximum(:pulse_time))
   	assert_difference('Pulse.where(node: node).count') do
-    	post :read, token: 'fixed60', time: '2015-05-10 00:00:00 UTC', format: :plain
+    	post :read, token: 'fixed60', time: '2015-05-10 00:00:00 Europe/Rome', format: :plain
   	end
   	assert_response(:success, message: "OK")
-  	assert_equal(Time.zone.parse('2015-05-10'), Pulse.where(node: node).maximum(:pulse_time))
+  	assert_equal(Time.zone.parse('2015-05-10 Europe/Rome'), Pulse.where(node: node).maximum(:pulse_time))
   	assert_equal(60, Pulse.where(node: node).order(:pulse_time).last.power)
 
   	assert_difference('Pulse.where(node: node).count') do

@@ -4,28 +4,40 @@ fixed20:
   title: fixed20
   user: test2
   authentication_token: fixed20
+  time_zone: Europe/Rome
 
 fixed60:
   title: fixed60
   user: test2
   authentication_token: fixed60
+  time_zone: Europe/Rome
 
 wday: 
   title: wday
   user: test1
   authentication_token: wday
+  time_zone: Europe/Rome
 
 hourly: 
   title: hourly
   user: test1
   authentication_token: hourly
+  time_zone: Europe/Rome
 
 monthly: 
   title: monthly
   user: test1
   authentication_token: monthly
+  time_zone: Europe/Rome
 
 real:
   title: real
   user: test1
   authentication_token: real
+  time_zone: Europe/Rome
+
+triang:
+  title: triang
+  user: test2
+  authentication_token: triang
+  time_zone: Europe/Rome

@@ -2,6 +2,8 @@ require 'test_helper'
 
 class PulseTestImport < ActiveSupport::TestCase
 
+	self.use_transactional_fixtures = true
+
 	test "calc_power" do
 		assert_equal(3600.0, Pulse.calc_power(1000, 1.0))
 		assert_equal(1800.0, Pulse.calc_power(1000, 2.0))
@@ -20,9 +22,10 @@ class PulseTestImport < ActiveSupport::TestCase
 	end	
 
 	test "calc_last_time" do
+		Time.zone = 'Europe/Rome'
 		current_node = Node.find_by_title('fixed60')
-		assert_equal(nil, Pulse.calc_last_time(current_node, Time.parse('2014-01-01')))
-		assert_equal(Time.parse('2015-05-09 23:59:00 UTC'), Pulse.calc_last_time(current_node, Time.parse('2015-07-01')))
+		assert_equal(nil, Pulse.calc_last_time(current_node, Time.zone.parse('2014-01-01')))
+		assert_equal(Time.zone.parse('2015-05-09 23:59:00'), Pulse.calc_last_time(current_node, Time.zone.parse('2015-07-01')))
 	end
 
 	test "read row sec msec" do

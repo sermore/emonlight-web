@@ -30,8 +30,8 @@ development:
 #  <<: *defaults
   adapter: postgresql
   database: "emonlight-web_development"
-  username: "postgres"
-  password: "sergio"
+  username: "emonlight"
+  password: "emonlight"
   host:     "localhost"
 
 
@@ -40,8 +40,8 @@ test: &test
 #  <<: *defaults
   adapter: postgresql
   database: "emonlight-web_test"
-  username: "postgres"
-  password: "sergio"
+  username: "emonlight"
+  password: "emonlight"
   host:     localhost
 
 production:

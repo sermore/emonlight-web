@@ -11,7 +11,7 @@ private
 		end
 		if user_signed_in? && params[:node_id]
 			@current_node = Node.where(id: params[:node_id], user: current_user).first
-			Time.zone = current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil? || @current_node.time_zone.empty?
+			Time.zone = @current_node.time_zone unless @current_node.nil? || @current_node.time_zone.nil? || @current_node.time_zone.empty?
 			@current_node
 		end
 	end

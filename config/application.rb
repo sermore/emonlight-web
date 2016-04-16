@@ -22,5 +22,12 @@ module EmonlightWeb
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
     config.active_record.raise_in_transactional_callbacks = true
+
+    config.active_job.queue_adapter = :delayed_job
+
+    config.after_initialize do
+      Delayed::Job.destroy_all
+      StatSchedulerJob.perform_later
+    end
   end
 end

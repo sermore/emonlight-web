@@ -5,7 +5,8 @@
 # below each fixture, per the syntax in the comments below
 
 <%
-t = DateTime.parse('2015-05-01')
+Time.zone = "Europe/Rome"
+t = Time.zone.parse('2015-05-01')
 n = 0
 pwh = 60.0
 while t.day < 10 do
@@ -14,12 +15,13 @@ pulse_fixed60_<%= n += 1 %>:
   node: fixed60
   pulse_time: <%=t%>
   power: <%=pwh%>
-<% 
-  t += (3600.0/pwh)/86400.0
+<%
+  t += (3600.0/pwh)
 end %>
 
 <%
-t = DateTime.parse('2015-05-01')
+Time.zone = "Europe/Rome"
+t = Time.zone.parse('2015-05-01')
 n = 0
 while t.day < 18 do
 %>
@@ -27,12 +29,13 @@ pulse_wday_<%= n += 1 %>:
   node: wday
   pulse_time: <%= t %>
   power: <%= pwh = 10 + t.wday * 10 %>
-<% 
-  t += (3600.0/pwh)/86400.0
+<%
+  t += (3600.0/pwh)
 end %>
 
 <%
-t = DateTime.parse('2015-05-01')
+Time.zone = "Europe/Rome"
+t = Time.zone.parse('2015-05-01')
 n = 0
 while t.day < 7 do
 %>
@@ -40,12 +43,13 @@ pulse_hourly_<%= n += 1 %>:
   node: hourly
   pulse_time: <%= t %>
   power: <%= pwh = 1000 + t.hour * 10 %>
-<% 
-  t += (3600.0/pwh)/86400.0
+<%
+  t += (3600.0/pwh)
 end %>
 
 <%
-t = DateTime.parse('2015-05-01')
+Time.zone = "Europe/Rome"
+t = Time.zone.parse('2015-05-01')
 n = 0
 while t.month < 7 do
 %>
@@ -53,12 +57,13 @@ pulse_monthly_<%= n += 1 %>:
   node: monthly
   pulse_time: <%= t %>
   power: <%= pwh = 10 + t.month * 10 %>
-<% 
-  t += (3600.0/pwh)/86400.0
+<%
+  t += (3600.0/pwh)
 end %>
 
 <%
-t = DateTime.parse('2014-12-01')
+Time.zone = "Europe/Rome"
+t = Time.zone.parse('2014-12-01')
 n = 0
 pwh = 20.0
 while t.year == 2014 || t.year <= 2015 && t.month < 3 do
@@ -67,11 +72,26 @@ pulse_fixed20_<%= n += 1 %>:
   node: fixed20
   pulse_time: <%=t%>
   power: <%=pwh%>
-<% 
-  t += (3600.0/pwh)/86400.0
+<%
+  t += (3600.0/pwh)
   # puts t
 end %>
 
 pulse_real_1:
   node: real
   pulse_time: "2015-04-25 15:00:00"
+
+<%
+Time.zone = "Europe/Rome"
+t = Time.zone.parse('2015-08-01')
+n = 0
+while t.day < 10 do
+  pwh = 100 + (1-(t.day % 2)*2) * t.hour * 150 + (t.day % 2) * 3450
+%>
+pulse_triangular_<%= n += 1 %>:
+  node: triang
+  pulse_time: <%=t%>
+  power: <%=pwh%>
+<%
+  t += (3600.0/pwh)
+end %>

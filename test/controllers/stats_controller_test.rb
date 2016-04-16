@@ -13,7 +13,11 @@ class StatsControllerTest < ActionController::TestCase
   	n = Node.find_by_title(:fixed60)
     get(:real_time_data, {node_id: n.id, time: '2015-05-09 23:58:00' }, format: :json)
     assert_response :success
-    assert_equal "[[\"2015-05-09T23:59:00.000Z\",60.0]]", @response.body
+    assert_equal "[[\"2015-05-09T23:59:00.000+02:00\",60.0]]", @response.body
+    n = Node.find_by_title(:fixed20)
+    get(:real_time_data, {node_id: n.id, time: '2015-02-28 23:56:00' }, format: :json)
+    assert_response :success
+    assert_equal "[[\"2015-02-28T23:57:00.000+01:00\",20.0]]", @response.body
     # pp @response.body
   end
 

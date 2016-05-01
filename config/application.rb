@@ -25,9 +25,9 @@ module EmonlightWeb
 
     config.active_job.queue_adapter = :delayed_job
 
-    config.after_initialize do
-      Delayed::Job.destroy_all
-      StatSchedulerJob.perform_later
-    end
+    # config.after_initialize do
+    #   Delayed::Job.destroy_all
+    #   StatSchedulerJob.perform_later
+    # end
   end
 end

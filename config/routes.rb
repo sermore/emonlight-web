@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
 
+  get 'help/getting_started'
+
+  get 'help/webapp_setup'
+
   authenticated :user do
     root :to => "nodes#index", as: :authenticated_root
   end

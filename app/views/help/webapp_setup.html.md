@@ -1,5 +1,3 @@
-Emonlight Web
-================
 
 Web application for the collection and visualization of energy meter information provided by [Emonlight energy meter probe](https://github.com/sermore/emonlight).
 

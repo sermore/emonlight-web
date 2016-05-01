@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= content_for?(:title) ? yield(:title) : "Emonlight" %></title>
+    <title><%= content_for?(:title) ? yield(:title) : 'Emonlight' %></title>
     <meta name="description" content="<%= content_for?(:description) ? yield(:description) : "Emonlight" %>">
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track' => true %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
-    <%= javascript_include_tag "//www.google.com/jsapi" %>
+    <%= javascript_include_tag '//www.google.com/jsapi' %>
     <%#= javascript_include_tag 'jquery.mousewheel.min', 'data-turbolinks-track' => true %>
     <%#= javascript_include_tag 'jQDateRangeSlider-withRuler-min', 'data-turbolinks-track' => true %>
     <%#= stylesheet_link_tag 'iThing', media: 'all', 'data-turbolinks-track' => true %>
@@ -22,8 +22,19 @@
       <%= render 'layouts/navigation' %>
     </header>
     <main role="main">
-       <%= render 'layouts/messages' %>
-       <%= yield %>
+      <%= render 'layouts/messages' %>
+      <% if controller_name == 'help' %>
+        <div class="page-header">
+          <h2><%= action_name.humanize %></h2>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <%= yield %>
+          </div>
+        </div>
+      <% else %>
+          <%= yield %>
+      <% end %>
     </main>
   </body>
 </html>

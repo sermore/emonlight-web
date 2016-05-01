@@ -1,21 +1,163 @@
-<div class="page-header">
-	<h2>Welcome</h2>
-</div>
+<!-- Carousel
+    ================================================== -->
+<div id="myCarousel" class="carousel slide" data-ride="carousel">
+  <!-- Indicators -->
+  <ol class="carousel-indicators">
+    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+    <li data-target="#myCarousel" data-slide-to="1"></li>
+    <li data-target="#myCarousel" data-slide-to="2"></li>
+  </ol>
+  <div class="carousel-inner" role="listbox">
+    <div class="item active real-time">
+      <div class="container">
+        <div class="carousel-caption">
+          <h1>Easy energy monitoring</h1>
+          <p>Monitoring for multiple sources, alarm using thresholds based on electric tariff, mobile friendly access</p>
+          <p><a class="btn btn-lg btn-primary" href="/users/sign_up" role="button">Sign up</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="item daily">
+      <div class="container">
+        <div class="carousel-caption">
+          <h1>Great statistics</h1>
+          <p>Real time, Daily, Weekly, with multiple hourly rates and more. Multiple graphs can be accessed in a dashboard</p>
+          <p><a class="btn btn-lg btn-primary" href="#" role="button">Learn more</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="item daily-per-month">
+      <div class="container">
+        <div class="carousel-caption">
+          <h1>Simple hardware and software setup</h1>
+          <p>Connect a simple energy meter with pulse output to a raspberry Pi to start monitoring home energy usage</p>
+          <p><a class="btn btn-lg btn-primary" href="/help/getting-started" role="button">Getting started</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div><!-- /.carousel -->
 
-<div class="panel panel-default">
+<!-- Marketing messaging and featurettes
+================================================== -->
+<!-- Wrap the rest of the page in another container to center all the content. -->
 
-	<div class="panel-heading">
-		<h3 class="panel-title">How to send data from emonLight RaspberryPi</h3>
-	</div>
-	<div class="panel-body">
-	<ul>
-		<li> Sign up</li>
-		<li> Create a node and take note of its authentication token</li>
-		<li> Configure emonLight RaspberryPi with these settings</li>
-		<pre>remote = "emonlight"
-url = "<%= "#{read_nodes_url}" %>"
-api-key = "[node authentication token]"</pre>
-	</ul>
-	</div>
+<div class="container marketing">
 
-</div>
+  <!-- Three columns of text below the carousel -->
+  <div class="row">
+    <div class="col-lg-4">
+      <span class="glyphicon glyphicon-scale" aria-hidden="true" aria-label="scale" style="font-size: 7em;" ></span>
+      <h2>Getting Started</h2>
+      <p>Configure RaspberryPi probe and start sending energy usage information.</p>
+      <p><a class="btn btn-default" href="/help/getting_started" role="button">RaspberryPi setup &raquo;</a></p>
+    </div><!-- /.col-lg-4 -->
+    <div class="col-lg-4">
+      <span class="glyphicon glyphicon-log-in" aria-hidden="true" aria-label="log-in" style="font-size: 7em;" ></span>
+      <h2>Sign up</h2>
+      <p>Sign up and start to collect energy usage information. Multiple sources can be collected, with different time zones.</p>
+      <p><a class="btn btn-default" href="/users/sign_up" role="button">Sign up &raquo;</a></p>
+    </div><!-- /.col-lg-4 -->
+    <div class="col-lg-4">
+      <span class="glyphicon glyphicon-wrench" aria-hidden="true" aria-label="wrench" style="font-size: 7em;" ></span>
+      <h2>Setup your own server</h2>
+      <p>Download and deploy on your own server, it's open source.</p>
+      <p><a class="btn btn-default" href="/help/webapp_setup" role="button">Instruction &raquo;</a></p>
+    </div><!-- /.col-lg-4 -->
+  </div><!-- /.row -->
+
+
+  <!-- START THE FEATURETTES -->
+
+  <hr class="featurette-divider">
+
+  <div class="row featurette">
+    <div class="col-md-7">
+      <h2 class="featurette-heading">Node management. <span class="text-muted"></span></h2>
+      <p class="lead">Each node is associated to an energy meter probe. A node has a name and a time zone. Node's energy data can be imported and exported.</p>
+    </div>
+    <div class="col-md-5">
+      <%= image_tag("nodes-mobile-pt.png", class: 'featurette-image img-responsive center-block') %>
+    </div>
+  </div>
+
+  <hr class="featurette-divider">
+
+  <div class="row featurette">
+    <div class="col-md-7 col-md-push-5">
+      <h2 class="featurette-heading">Statistics. <span class="text-muted"></span></h2>
+      <p class="lead">
+        Real time data, updated automatically every 5 seconds.<br/>
+        Histograms<br/>
+        Daily, Weekly, Monthly, Yearly usage.<br/>
+        Overall data in the blue bar, last period in the red bar.<br/>
+        Data updated every ten minutes.
+      </p>
+    </div>
+    <div class="col-md-5 col-md-pull-7">
+      <%= image_tag("graphs1.png", class: 'featurette-image img-responsive center-block') %>
+    </div>
+  </div>
+
+  <hr class="featurette-divider">
+
+  <div class="row featurette">
+    <div class="col-md-7">
+      <h2 class="featurette-heading">More statistics. <span class="text-muted"></span></h2>
+      <p class="lead">
+        Daily usage based on hourly rates F1 and F2.<br/>
+        Navigable time series. Yearly stats.
+      </p>
+    </div>
+    <div class="col-md-5">
+      <%= image_tag("graphs2.png", class: 'featurette-image img-responsive center-block') %>
+    </div>
+  </div>
+
+  <hr class="featurette-divider">
+
+  <!-- /END THE FEATURETTES -->
+
+
+  <!-- FOOTER -->
+  <footer>
+    <p class="pull-right"><a href="#">Back to top</a></p>
+    <!--<p>&copy; 2016 Company, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>-->
+  </footer>
+
+</div><!-- /.container -->
+
+
+
+<!--<div class="page-header">-->
+  <!---->
+  <!---->
+  <!---->
+	<!--<h2>Welcome</h2>-->
+<!--</div>-->
+
+<!--<div class="panel panel-default">-->
+
+	<!--<div class="panel-heading">-->
+		<!--<h3 class="panel-title">How to send data from emonLight RaspberryPi</h3>-->
+	<!--</div>-->
+	<!--<div class="panel-body">-->
+	<!--<ul>-->
+		<!--<li> Sign up</li>-->
+		<!--<li> Create a node and take note of its authentication token</li>-->
+		<!--<li> Configure emonLight RaspberryPi with these settings</li>-->
+		<!--<pre>remote = "emonlight"-->
+<!--url = "<%= "#{read_nodes_url}" %>"-->
+<!--api-key = "[node authentication token]"</pre>-->
+	<!--</ul>-->
+	<!--</div>-->
+
+<!--</div>-->

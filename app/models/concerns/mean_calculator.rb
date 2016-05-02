@@ -435,6 +435,14 @@ module MeanCalculator
       s
     end
 
+    def erasable_pulses
+      Pulse.where("pulses.pulse_time < now() - interval '3 hour' and pulses.pulse_time < (select min(stats.end_time) from stats where stats.node_id = pulses.node_id)")
+    end
+
+    def erase_pulses
+      erasable_pulses.delete_all
+    end
+
   end
 
 end

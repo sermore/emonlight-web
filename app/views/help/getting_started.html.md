@@ -4,11 +4,14 @@ It's a simple home energy monitor for *Raspberry Pi*, optimized for simplicity a
 Source code is available at [github](https://github.com/sermore/emonlight).
 Features:
 
-* Power usage levels are read from an standard energy meter with pulse output;
-* Power usage is collected and sent to [emoncms.org](http://emoncms.org); 
-* Able to drive a buzzer for signaling high-level usage with configurable soft and hard thresholds;
-  * soft threshold: 1 to 3 intermittent beeps signal depending on proximity to time limit; default for soft limit is set to 3300 Wh with a time limit of 3 hours;
-  * hard threshold: 4 to 6 intermittent beeps signal depending on proximity to time limit; default for hard limit is set to 4000 Wh with a time limit of 4 minutes;
+* Power usage levels are read from one or more standard energy meters with pulse output
+* Power usage is collected and can be sent to your own server running [emonlight-web](http://github.com/sermore/emonlight-web) or to [emonlight demo site](emonlight.reliqs.net). Output for [emoncms.org](http://emoncms.org) is supported too.
+Output for [emoncms.org](http://emoncms.org) is supported too.
+* Multiple sources and multiple servers are supported
+* Able to drive a buzzer for signaling high-level usage with configurable soft and hard thresholds
+  * soft threshold: 1 to 3 intermittent beeps signal depending on proximity to time limit; default for soft limit is set to 3300 Wh with a time limit of 3 hours
+  * hard threshold: 4 to 6 intermittent beeps signal depending on proximity to time limit; default for hard limit is set to 4000 Wh with a time limit of 4 minutes
+
 
 ## Hardware
 
@@ -26,11 +29,11 @@ Any version will do, software has been developed using a Raspberry B+.
 
 Any energy meter with pulse output is fine, see some examples below:
 
-* [Acti 9 DIN-rail KWh meters for single-phase circuits](http://www.schneider-electric.com/products/ww/en/4100-power-energy-monitoring-system/4125-basic-energy-metering/61083-acti-9-iem2000-series/)
-* [ELECTRONIC SINGLE PHASE ENERGY METER](http://www.tecnoswitch.com/it/component/k2/item/93-contatore-elettronico-di-energia-elettrica-monofase-electronic-single-phase-energy-meter)
-* [Single Phase Energy meters](http://www.ebay.com/itm/5-65-A-230V-50HZ-din-rail-Energy-meter-voltage-current-active-reactive-power-KWH-/261851378718?pt=LH_DefaultDomain_0&hash=item3cf78ef41e)
+* http://www.schneider-electric.com/products/ww/en/4100-power-energy-monitoring-system/4125-basic-energy-metering/61083-acti-9-iem2000-series/
+* http://www.tecnoswitch.com/it/component/k2/item/93-contatore-elettronico-di-energia-elettrica-monofase-electronic-single-phase-energy-meter
+* http://www.ebay.com/itm/5-65-A-230V-50HZ-din-rail-Energy-meter-voltage-current-active-reactive-power-KWH-/261851378718?pt=LH_DefaultDomain_0&hash=item3cf78ef41e
 
-Information about pulse output can be found [here](http://openenergymonitor.org/emon/buildingblocks/introduction-to-pulse-counting).
+Information about pulse output can be found here http://openenergymonitor.org/emon/buildingblocks/introduction-to-pulse-counting.
 
 ### Buzzer
 
@@ -40,7 +43,7 @@ Due to the constraint above, be aware that buzzer must have:
 * built-in oscillator
 * driven by 3.3V
 
-Here an example of such a [buzzer](https://www.adafruit.com/products/1536).
+Here an example of such a buzzer https://www.adafruit.com/products/1536
 
 
 ### Wiring
@@ -145,32 +148,56 @@ Configuration of GPIO pins must be performed before first program execution.
 `/etc/emonlight.conf` or `$HOME/.emonlight`
 
     # WARNING this program can drive gpio pins only after pin configuration is made by running gpio 
-    # gpio pin for pulse signal reading
-    pulse-pin = 17
+    verbose = true;
+    
+    sources = ({
+        # gpio pin for pulse signal reading
+        pin = 17;
+        # number of pulses equivalent to 1 kWh
+        pulses-per-kilowatt-hour = 1000;
+    }, {
+        pin = 3;
+        pulses-per-kilowatt-hour = 1200;
+    });
+
+    servers = ({
+        url = "http://emonlight.reliqs.net";
+        protocol = "emonlight";
+        map = ({
+            pin = 17;
+            node-id = 1;
+            api-key = "key-3";
+        }, {
+            pin = 3; 
+            node-id = 2;
+            api-key = "key-4";
+        });
+    }, {
+        url = "http://emoncms.org";
+        protocol = "emoncms";
+        map = ({
+            pin = 17;
+            node-id = 5;
+            api-key = "key-1";
+        }, {
+            pin = 3; 
+            node-id = 6; 
+            api-key = "key-2";
+        });
+    });
+
     # gpio pin to drive buzzer
     buzzer-pin = 3
-    # enable verbose mode
-    verbose = true
-    # number of pulses equivalent to 1 kWh
-    pulses-per-kilowatt-hour = 1000
-
+    buzzer-source = 17
     # power thresholds
     power-soft-threshold = 3300
-    # 3 hours time limit for soft threshold
+    # 3 hours
     power-soft-threshold-time = 10800 
     power-hard-threshold = 4000
-    # 4 minutes time limit for hard threshold
-    power-hard-threshold-time = 240 
-
-    # url to access emoncms site
-    emocms-url = "http://emoncms.org";
-    # api-key for emoncms.org
-    api-key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-    # node id for emoncms.org
-    node-id = 1
-
+    # 4 minutes
+    power-hard-threshold-time = 240
+    
     # if a data-log configuration is found then all data received is saved to this file
     data-log = "/var/lib/emonlight/emonlight-data.log"
     # store of status persistent information: time and count for last pulse received
     data-store = "/var/lib/emonlight/emonlight-data"
-    

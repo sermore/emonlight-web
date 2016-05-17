@@ -34,9 +34,33 @@ class Pulse < ActiveRecord::Base
     end
   end
 
+  def self.read_nodes(nodes)
+    begin
+      cnt = 0
+      ActiveRecord::Base.transaction do
+        nodes.each do |n|
+          next if n.nil? || n.empty?
+          last_time = nil
+          n[:data].each do |row|
+            raise "malformed row: '#{row}'" if row.length != 3
+            t = Time.zone.at(row[0].to_i + row[1].to_d / 1.0e9)
+            p = row[2].to_f
+            last_time, t, power = read_power(n[:node], t, last_time)
+            q = Pulse.create!(node: n[:node], :pulse_time => t, :power => power > 0 ? power : p)
+            cnt += 1
+          end
+        end
+      end
+    rescue
+      logger.error "Error reading #{nodes}"
+      cnt = 0
+    end
+    cnt
+  end
+
   def self.import_xx(node_id, file, truncate = true)
     t0 = 0
-    current_node = Node.find(node_id)
+    current_node = Node.find_by_id(node_id)
     ActiveRecord::Base.transaction do
       #ActiveRecord::Base.connection.execute('TRUNCATE pulses RESTART IDENTITY') if truncate
       i = 0
@@ -58,11 +82,11 @@ class Pulse < ActiveRecord::Base
   def self.import(node_id, file, format, clear_on_import=false)
     current_node = Node.find(node_id)
     read_func, row_read_func = case format
-    when 't2'
-    	[:read_csv, :read_row_sec_msec]
-    when 't1'
-    	[:read_csv, :read_row_csv]
-    end
+                                 when 't2'
+                                   [:read_csv, :read_row_sec_msec]
+                                 when 't1'
+                                   [:read_csv, :read_row_csv]
+                               end
     Pulse.read(current_node, file, clear_on_import, read_func, row_read_func)
   end
 
@@ -171,7 +195,7 @@ class Pulse < ActiveRecord::Base
             last_time = time
             i += 1
           else
-          	logger.error "Discarding row #{i}: #{r}"
+            logger.error "Discarding row #{i}: #{r}"
           end
         rescue Exception => e
           logger.error "Error reading row #{i}: #{r}"

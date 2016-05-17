@@ -1,7 +1,6 @@
 Rails.application.routes.draw do
 
   get 'help/getting_started'
-
   get 'help/webapp_setup'
 
   authenticated :user do
@@ -15,10 +14,9 @@ Rails.application.routes.draw do
   		post 'import'
       post 'export'
   	end
-    collection do
-      post 'read' 
-    end
   end
+
+  post 'input/read'
 
   get 'stats/:node_id/dashboard' => 'stats#dashboard', as: :dashboard_stats
   get 'stats/:node_id/time_series_data' => 'stats#time_series_data', as: :time_series_data_stats

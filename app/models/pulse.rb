@@ -43,10 +43,11 @@ class Pulse < ActiveRecord::Base
           last_time = nil
           n[:data].each do |row|
             raise "malformed row: '#{row}'" if row.length != 3
-            t = Time.zone.at(row[0].to_i + row[1].to_d / 1.0e9)
+            t = Time.zone.at(row[0].to_d + row[1].to_d / 1.0e9)
             p = row[2].to_f
             last_time, t, power = read_power(n[:node], t, last_time)
             q = Pulse.create!(node: n[:node], :pulse_time => t, :power => power > 0 ? power : p)
+            last_time = t
             cnt += 1
           end
         end
